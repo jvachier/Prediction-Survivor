@@ -154,30 +154,7 @@ class NN:
     X_test: np.array
     y_test: list
 
-    # n_xtrain: int = None
-    # m_xtrain: int = None
-    # n_ytrain: int = None
-    # m_xtrain: int = None
-
     modell_NN: Sequential = None
-
-    # def __init__(self, X_train, X_test, y_train, y_test) -> None:
-    #     self.X_train = X_train
-    #     self.y_train = y_train
-    #     self.X_test = X_test
-    #     self.y_test = y_test
-
-    #     self.n_xtrain = None
-    #     self.m_xtrain = None
-    #     self.n_ytrain = None
-    #     self.m_xtrain = None
-
-    #     self.modell_NN = None
-
-    # def model_parameters(self) -> None:
-    #     self.y_train = to_categorical(self.y_train, num_classes=2)
-    #     self.n_xtrain, self.m_xtrain = self.X_train.T.shape
-    #     self.n_ytrain, self.m_xtrain = self.y_train.shape
 
     def model_NN(self, n_xtrain: int) -> Sequential:
         self.modell_NN = Sequential()
@@ -195,7 +172,7 @@ class NN:
         self.modell_NN.add(Dense(units=32, activation="relu"))
         self.modell_NN.add(Dense(2, activation="sigmoid"))
         self.modell_NN.compile(
-            optimizer=Adam(learning_rate=1e-4),
+            optimizer=Adam(learning_rate=1e-5),
             loss="binary_crossentropy",
             # metrics=["binary_accuracy"],
             metrics=["accuracy"],
@@ -211,7 +188,6 @@ class NN:
             self.modell_NN.fit(
                 X_train[train],
                 y_train[train],
-                # epochs=self.epochs,
                 epochs=1500,
                 callbacks=[callback],
                 verbose=0,

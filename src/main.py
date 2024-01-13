@@ -14,7 +14,7 @@ import modules.loading as loading
 def main() -> None:
     parser = ArgumentParser()
     parser.add_argument("--model_ensemble", action="store_true")
-    parser.add_argument("--standarscaler", action="store_true")
+    parser.add_argument("--standardscaler", action="store_true")
 
     args = parser.parse_args()
 
@@ -37,14 +37,23 @@ def main() -> None:
     Train = data_preparation.Data_preparation(df_train)
     train_prep1 = Train.preparation_first()
     train_selec = Train.selection(train_prep1)
-    train_prep2 = Train.preparation_second(train_selec)
-    train = Train.preparation_dummies(train_prep2)
 
     Test = data_preparation.Data_preparation(df_test)
     test_prep1 = Test.preparation_first()
     test_selec = Test.selection(test_prep1)
-    test_prep2 = Test.preparation_second(test_selec)
-    test = Test.preparation_dummies(test_prep2)
+
+    if args.standardscaler:
+        train_prep2 = Train.preparation_second_standardscaler(train_selec)
+        train = Train.preparation_dummies_standardscaler(train_prep2)
+
+        test_prep2 = Test.preparation_second_standardscaler(test_selec)
+        test = Test.preparation_dummies_standardscaler(test_prep2)
+    else:
+        train_prep2 = Train.preparation_second(train_selec)
+        train = Train.preparation_dummies(train_prep2)
+
+        test_prep2 = Test.preparation_second(test_selec)
+        test = Test.preparation_dummies(test_prep2)
 
     print("Models\n")
     Split = models.split(train)
