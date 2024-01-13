@@ -179,7 +179,7 @@ class NN:
     #     self.n_xtrain, self.m_xtrain = self.X_train.T.shape
     #     self.n_ytrain, self.m_xtrain = self.y_train.shape
 
-    def model_NN(self, n_xtrain) -> Sequential:
+    def model_NN(self, n_xtrain: int) -> Sequential:
         self.modell_NN = Sequential()
         self.modell_NN.add(Dense(units=128, activation="relu", input_shape=(n_xtrain,)))
         self.modell_NN.add(Dense(units=256, activation="relu"))
@@ -202,7 +202,7 @@ class NN:
         )
         return self.modell_NN
 
-    def fit_NN(self, X_train, y_train) -> None:
+    def fit_NN(self, X_train: np.array, y_train: list) -> None:
         scores_NN = []
         callback = EarlyStopping(monitor="val_loss", patience=50)
 
