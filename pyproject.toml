@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "titanic"
+name = "Prediction-Survival"
 version = "0.1.0"
 description = ""
 authors = ["Jeremy Vachier"]
