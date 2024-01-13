@@ -27,8 +27,7 @@ def main() -> None:
     Split = models.split(train)
     X_train, X_test, y_train, y_test = Split.train_split()
 
-    # Random Forest
-    RF = models.random_forest(X_train, X_test, y_train, y_test)
+    RF = models.Model_Ensemble(X_train, X_test, y_train, y_test)
 
     mv_clf = RF.model_cross()
 
