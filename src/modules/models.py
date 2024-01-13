@@ -20,6 +20,8 @@ from dataclasses import dataclass
 import pandas as pd
 import numpy as np
 
+from typing import Tuple
+
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
@@ -44,7 +46,7 @@ from keras.callbacks import EarlyStopping
 class split:
     train: pd.DataFrame
 
-    def train_split(self):
+    def train_split(self) -> Tuple[np.array, np.array, list, list]:
         X_train, X_test, y_train, y_test = train_test_split(
             self.train.drop(columns=["Survived"]).values,
             self.train["Survived"].values,
@@ -56,13 +58,13 @@ class split:
 
 
 @dataclass(slots=True)
-class random_forest:
+class Model_Ensemble:
     X_train: np.array
     X_test: np.array
     y_train: list
     y_test: list
 
-    def model_cross(self):
+    def model_cross(self) -> VotingClassifier:
         clf_RFC = RandomForestClassifier(
             n_estimators=50,
             max_depth=10,
@@ -78,9 +80,15 @@ class random_forest:
             max_depth=10, max_features="sqrt", random_state=5
         )
 
-        clf_sgdc = SGDClassifier(loss="log_loss", max_iter=10000, random_state=4)
+        clf_sgdc = SGDClassifier(
+            loss="log_loss",
+            max_iter=10000,
+            random_state=4,
+            learning_rate="adaptive",
+            eta0=1e-4,
+        )
 
-        clf_knnc = KNeighborsClassifier(n_neighbors=3)
+        clf_knnc = KNeighborsClassifier(n_neighbors=50)
 
         pipe_RFC = Pipeline(
             [
@@ -145,27 +153,16 @@ class random_forest:
         return mv_clf
 
 
+@dataclass(slots=True)
 class NN:
-    def __init__(self, X_train, X_test, y_train, y_test) -> None:
-        self.X_train = X_train
-        self.y_train = y_train
-        self.X_test = X_test
-        self.y_test = y_test
+    X_train: np.array
+    y_train: list
+    X_test: np.array
+    y_test: list
 
-        self.n_xtrain = None
-        self.m_xtrain = None
-        self.n_ytrain = None
-        self.m_xtrain = None
+    modell_NN: Sequential = None
 
-        self.modell_NN = None
-        self.modell = None
-
-    def model_parameters(self) -> None:
-        self.y_train = to_categorical(self.y_train, num_classes=2)
-        self.n_xtrain, self.m_xtrain = self.X_train.T.shape
-        self.n_ytrain, self.m_xtrain = self.y_train.shape
-
-    def model_NN(self, n_xtrain) -> tf:
+    def model_NN(self, n_xtrain: int) -> Sequential:
         self.modell_NN = Sequential()
         self.modell_NN.add(Dense(units=128, activation="relu", input_shape=(n_xtrain,)))
         self.modell_NN.add(Dense(units=256, activation="relu"))
@@ -181,14 +178,14 @@ class NN:
         self.modell_NN.add(Dense(units=32, activation="relu"))
         self.modell_NN.add(Dense(2, activation="sigmoid"))
         self.modell_NN.compile(
-            optimizer=Adam(learning_rate=1e-4),
+            optimizer=Adam(learning_rate=1e-5),
             loss="binary_crossentropy",
             # metrics=["binary_accuracy"],
             metrics=["accuracy"],
         )
         return self.modell_NN
 
-    def fit_NN(self, X_train, y_train) -> None:
+    def fit_NN(self, X_train: np.array, y_train: list) -> None:
         scores_NN = []
         callback = EarlyStopping(monitor="val_loss", patience=50)
 
@@ -197,7 +194,6 @@ class NN:
             self.modell_NN.fit(
                 X_train[train],
                 y_train[train],
-                # epochs=self.epochs,
                 epochs=1500,
                 callbacks=[callback],
                 verbose=0,
