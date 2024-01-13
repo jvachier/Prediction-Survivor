@@ -14,16 +14,20 @@
 *.bin
 *.h5
 *.keras
+*.pyc
+*.so
+
 *data/
 *videos/
 *pickle_files/
-*.pyc
+*predictions/
+
 *__pycache__/
 __pycache__/
-*.so
+
 
 # Ignore specific file
-test.mp4
+*.mp4
 
 # Ignore all executable files
 *.o

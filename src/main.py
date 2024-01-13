@@ -4,13 +4,13 @@ import pandas as pd
 
 from tensorflow.keras.utils import to_categorical
 
-import data_preparation as data_preparation
-import models as models
+import modules.data_preparation as data_preparation
+import modules.models as models
 
 
 def main() -> None:
-    df_train = pd.read_csv("../titanic/train.csv")
-    df_test = pd.read_csv("../titanic/test.csv")
+    df_train = pd.read_csv("./data/train.csv")
+    df_test = pd.read_csv("./data/test.csv")
 
     Train = data_preparation.Data_preparation(df_train)
     train_prep1 = Train.preparation_first()
