@@ -80,9 +80,15 @@ class Model_Ensemble:
             max_depth=10, max_features="sqrt", random_state=5
         )
 
-        clf_sgdc = SGDClassifier(loss="log_loss", max_iter=10000, random_state=4)
+        clf_sgdc = SGDClassifier(
+            loss="log_loss",
+            max_iter=10000,
+            random_state=4,
+            learning_rate="adaptive",
+            eta0=1e-4,
+        )
 
-        clf_knnc = KNeighborsClassifier(n_neighbors=3)
+        clf_knnc = KNeighborsClassifier(n_neighbors=50)
 
         pipe_RFC = Pipeline(
             [

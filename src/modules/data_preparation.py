@@ -3,6 +3,7 @@ import numpy as np
 import random
 import re
 from dataclasses import dataclass
+import pickle
 
 from sklearn.preprocessing import StandardScaler
 
@@ -142,3 +143,23 @@ class Data_preparation:
             dtype=int,
         )
         return df_dummies
+
+
+@dataclass(slots=True)
+class Load_Save:
+    name: str
+
+    def load_dataframe(self) -> pd.DataFrame:
+        dbfile_dataframe = open(
+            "./pickle_files/data_preparation/data_set_" + str(self.name), "rb"
+        )
+        data_set = pickle.load(dbfile_dataframe)
+        dbfile_dataframe.close()
+        return data_set
+
+    def save_dataframe(self, data_set: pd.DataFrame) -> None:
+        dbfile_dataframe = open(
+            "./pickle_files/data_preparation/data_set_" + str(self.name), "ab"
+        )
+        pickle.dump(data_set, dbfile_dataframe)
+        dbfile_dataframe.close()

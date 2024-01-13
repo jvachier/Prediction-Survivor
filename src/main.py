@@ -34,26 +34,50 @@ def main() -> None:
         ) = LOAD.load_db_file()
 
     print("Data Preparation\n")
-    Train = data_preparation.Data_preparation(df_train)
-    train_prep1 = Train.preparation_first()
-    train_selec = Train.selection(train_prep1)
+    LOAD_DATA_train = data_preparation.Load_Save("train")
+    LOAD_DATA_test = data_preparation.Load_Save("test")
 
-    Test = data_preparation.Data_preparation(df_test)
-    test_prep1 = Test.preparation_first()
-    test_selec = Test.selection(test_prep1)
+    LOAD_DATA_train_standardscaler = data_preparation.Load_Save("train_standardscaler")
+    LOAD_DATA_test_standardscaler = data_preparation.Load_Save("test_standardscaler")
 
-    if args.standardscaler:
-        train_prep2 = Train.preparation_second_standardscaler(train_selec)
-        train = Train.preparation_dummies_standardscaler(train_prep2)
+    if (
+        os.path.isfile("./pickle_files/data_preparation/data_set_train")
+        & os.path.isfile("./pickle_files/data_preparation/data_set_train_standarscaler")
+        is False
+    ):
+        Train = data_preparation.Data_preparation(df_train)
+        train_prep1 = Train.preparation_first()
+        train_selec = Train.selection(train_prep1)
 
-        test_prep2 = Test.preparation_second_standardscaler(test_selec)
-        test = Test.preparation_dummies_standardscaler(test_prep2)
+        Test = data_preparation.Data_preparation(df_test)
+        test_prep1 = Test.preparation_first()
+        test_selec = Test.selection(test_prep1)
+
+        if args.standardscaler:
+            train_prep2 = Train.preparation_second_standardscaler(train_selec)
+            train = Train.preparation_dummies_standardscaler(train_prep2)
+
+            test_prep2 = Test.preparation_second_standardscaler(test_selec)
+            test = Test.preparation_dummies_standardscaler(test_prep2)
+
+            LOAD_DATA_train_standardscaler.save_dataframe(train)
+            LOAD_DATA_test_standardscaler.save_dataframe(test)
+        else:
+            train_prep2 = Train.preparation_second(train_selec)
+            train = Train.preparation_dummies(train_prep2)
+
+            test_prep2 = Test.preparation_second(test_selec)
+            test = Test.preparation_dummies(test_prep2)
+
+            LOAD_DATA_train.save_dataframe(train)
+            LOAD_DATA_test.save_dataframe(test)
     else:
-        train_prep2 = Train.preparation_second(train_selec)
-        train = Train.preparation_dummies(train_prep2)
-
-        test_prep2 = Test.preparation_second(test_selec)
-        test = Test.preparation_dummies(test_prep2)
+        if args.standardscaler:
+            train = LOAD_DATA_train_standardscaler.load_dataframe()
+            test = LOAD_DATA_test_standardscaler.load_dataframe()
+        else:
+            train = LOAD_DATA_train.load_dataframe()
+            test = LOAD_DATA_test.load_dataframe()
 
     print("Models\n")
     Split = models.split(train)
