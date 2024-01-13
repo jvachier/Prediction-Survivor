@@ -20,6 +20,8 @@ from dataclasses import dataclass
 import pandas as pd
 import numpy as np
 
+from typing import Tuple
+
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
@@ -44,7 +46,7 @@ from keras.callbacks import EarlyStopping
 class split:
     train: pd.DataFrame
 
-    def train_split(self):
+    def train_split(self) -> Tuple[np.array, np.array, list, list]:
         X_train, X_test, y_train, y_test = train_test_split(
             self.train.drop(columns=["Survived"]).values,
             self.train["Survived"].values,
@@ -62,7 +64,7 @@ class random_forest:
     y_train: list
     y_test: list
 
-    def model_cross(self):
+    def model_cross(self) -> VotingClassifier:
         clf_RFC = RandomForestClassifier(
             n_estimators=50,
             max_depth=10,
@@ -145,27 +147,39 @@ class random_forest:
         return mv_clf
 
 
+@dataclass(slots=True)
 class NN:
-    def __init__(self, X_train, X_test, y_train, y_test) -> None:
-        self.X_train = X_train
-        self.y_train = y_train
-        self.X_test = X_test
-        self.y_test = y_test
+    X_train: np.array
+    y_train: list
+    X_test: np.array
+    y_test: list
 
-        self.n_xtrain = None
-        self.m_xtrain = None
-        self.n_ytrain = None
-        self.m_xtrain = None
+    # n_xtrain: int = None
+    # m_xtrain: int = None
+    # n_ytrain: int = None
+    # m_xtrain: int = None
 
-        self.modell_NN = None
-        self.modell = None
+    modell_NN: Sequential = None
 
-    def model_parameters(self) -> None:
-        self.y_train = to_categorical(self.y_train, num_classes=2)
-        self.n_xtrain, self.m_xtrain = self.X_train.T.shape
-        self.n_ytrain, self.m_xtrain = self.y_train.shape
+    # def __init__(self, X_train, X_test, y_train, y_test) -> None:
+    #     self.X_train = X_train
+    #     self.y_train = y_train
+    #     self.X_test = X_test
+    #     self.y_test = y_test
 
-    def model_NN(self, n_xtrain) -> tf:
+    #     self.n_xtrain = None
+    #     self.m_xtrain = None
+    #     self.n_ytrain = None
+    #     self.m_xtrain = None
+
+    #     self.modell_NN = None
+
+    # def model_parameters(self) -> None:
+    #     self.y_train = to_categorical(self.y_train, num_classes=2)
+    #     self.n_xtrain, self.m_xtrain = self.X_train.T.shape
+    #     self.n_ytrain, self.m_xtrain = self.y_train.shape
+
+    def model_NN(self, n_xtrain) -> Sequential:
         self.modell_NN = Sequential()
         self.modell_NN.add(Dense(units=128, activation="relu", input_shape=(n_xtrain,)))
         self.modell_NN.add(Dense(units=256, activation="relu"))

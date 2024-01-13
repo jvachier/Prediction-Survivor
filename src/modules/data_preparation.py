@@ -75,7 +75,7 @@ class Data_preparation:
         # df_selected = df_selected.dropna()
         return df_selected
 
-    def preparation_second(self, df_selected: pd.DataFrame):
+    def preparation_second(self, df_selected: pd.DataFrame) -> pd.DataFrame:
         df_pre2 = df_selected.copy()
         df_pre2["Embarked"] = df_pre2["Embarked"].replace(["S", "C", "Q"], [0, 1, 2])
         df_pre2["Sex"] = df_pre2["Sex"].replace(["female", "male"], [0, 1])

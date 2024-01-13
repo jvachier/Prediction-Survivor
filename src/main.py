@@ -51,7 +51,7 @@ def main() -> None:
     # n_ytrain, m_xtrain = y_train.shape
 
     test_result_NN = test.copy()
-    NN = models.NN(X_train, X_test, y_train, y_test)
+    NN = models.NN(X_train, y_train, X_test, y_test)
     # NN.model_parameters()
     modell_NN = NN.model_NN(n_xtrain)
     NN.fit_NN(features_train, y_train)
