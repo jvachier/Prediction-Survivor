@@ -2,15 +2,36 @@ import os.path
 import numpy as np
 import pandas as pd
 
+from argparse import ArgumentParser
+
 from tensorflow.keras.utils import to_categorical
 
 import modules.data_preparation as data_preparation
 import modules.models as models
+import modules.loading as loading
 
 
 def main() -> None:
-    df_train = pd.read_csv("./data/train.csv")
-    df_test = pd.read_csv("./data/test.csv")
+    parser = ArgumentParser()
+    parser.add_argument("--model_ensemble", action="store_true")
+    parser.add_argument("--standarscaler", action="store_true")
+
+    args = parser.parse_args()
+
+    print("Loading data\n")
+
+    LOAD = loading.Loading_files()
+
+    if os.path.isfile("./pickle_files/loading/train") is False:
+        (
+            df_train,
+            df_test,
+        ) = LOAD.load_save_df()
+    else:
+        (
+            df_train,
+            df_test,
+        ) = LOAD.load_db_file()
 
     Train = data_preparation.Data_preparation(df_train)
     train_prep1 = Train.preparation_first()
@@ -27,48 +48,50 @@ def main() -> None:
     Split = models.split(train)
     X_train, X_test, y_train, y_test = Split.train_split()
 
-    RF = models.Model_Ensemble(X_train, X_test, y_train, y_test)
+    if args.model_ensemble:
+        RF = models.Model_Ensemble(X_train, X_test, y_train, y_test)
 
-    mv_clf = RF.model_cross()
+        mv_clf = RF.model_cross()
 
-    prediction_rfc = mv_clf.predict(test.values)
-    test_result_rfc = test.copy()
-    test_result_rfc["Survived"] = prediction_rfc
-    results_rfc = test_result_rfc[["PassengerId", "Survived"]]
+        prediction_rfc = mv_clf.predict(test.values)
+        test_result_rfc = test.copy()
+        test_result_rfc["Survived"] = prediction_rfc
+        results_rfc = test_result_rfc[["PassengerId", "Survived"]]
 
-    if os.path.isfile("./predictions/prediction_titanic_RFC_new.csv") is False:
-        results_rfc.to_csv("./predictions/prediction_titanic_RFC_new.csv", index=False)
+        if os.path.isfile("./predictions/prediction_titanic_RFC_new.csv") is False:
+            results_rfc.to_csv(
+                "./predictions/prediction_titanic_RFC_new.csv", index=False
+            )
+    else:
+        # Deep Neural Netowork
+        y_train = train.loc[:, "Survived"].to_numpy()
+        features_train = train.drop(columns=["Survived"]).to_numpy()
+        y_train = to_categorical(
+            y_train, num_classes=2
+        )  # not to be used with StratifiedKFold
+        n_xtrain, m_xtrain = features_train.T.shape
+        # n_ytrain, m_xtrain = y_train.shape
 
-    # Deep Neural Netowork
+        test_result_NN = test.copy()
+        NN = models.NN(X_train, y_train, X_test, y_test)
+        # NN.model_parameters()
+        modell_NN = NN.model_NN(n_xtrain)
+        NN.fit_NN(features_train, y_train)
 
-    y_train = train.loc[:, "Survived"].to_numpy()
-    features_train = train.drop(columns=["Survived"]).to_numpy()
-    y_train = to_categorical(
-        y_train, num_classes=2
-    )  # not to be used with StratifiedKFold
-    n_xtrain, m_xtrain = features_train.T.shape
-    # n_ytrain, m_xtrain = y_train.shape
+        print(modell_NN.summary())
 
-    test_result_NN = test.copy()
-    NN = models.NN(X_train, y_train, X_test, y_test)
-    # NN.model_parameters()
-    modell_NN = NN.model_NN(n_xtrain)
-    NN.fit_NN(features_train, y_train)
+        predictions = modell_NN.predict(x=test.to_numpy(), verbose=2)
+        n_test, m_test = predictions.shape
+        Label = []
+        for i in range(n_test):
+            Label.append(np.argmax(predictions[i], 0))
+        Label_array = np.asarray(Label).reshape(-1)
 
-    print(modell_NN.summary())
+        test_result_NN["Survived"] = Label_array
+        results_NN = test_result_NN[["PassengerId", "Survived"]]
 
-    predictions = modell_NN.predict(x=test.to_numpy(), verbose=2)
-    n_test, m_test = predictions.shape
-    Label = []
-    for i in range(n_test):
-        Label.append(np.argmax(predictions[i], 0))
-    Label_array = np.asarray(Label).reshape(-1)
-
-    test_result_NN["Survived"] = Label_array
-    results_NN = test_result_NN[["PassengerId", "Survived"]]
-
-    if os.path.isfile("./predictions/prediction_titanic_NN.csv") is False:
-        results_NN.to_csv("./predictions/prediction_titanic_NN.csv", index=False)
+        if os.path.isfile("./predictions/prediction_titanic_NN.csv") is False:
+            results_NN.to_csv("./predictions/prediction_titanic_NN.csv", index=False)
 
 
 if __name__ == "__main__":
