@@ -58,7 +58,7 @@ class split:
 
 
 @dataclass(slots=True)
-class random_forest:
+class Model_Ensemble:
     X_train: np.array
     X_test: np.array
     y_train: list
