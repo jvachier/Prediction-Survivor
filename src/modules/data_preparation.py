@@ -113,7 +113,7 @@ class Data_preparation:
         # dummies for Embarked, Pclass, Title, Age, Fare
         df_dummies = pd.get_dummies(
             df_pre2,
-            columns=["Title", "Pclass", "Age", "Embarked"],
+            columns=["Title", "Pclass", "Age", "Embarked", "Fare"],
             drop_first=True,
             dtype=int,
         )

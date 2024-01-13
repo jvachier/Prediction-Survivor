@@ -33,6 +33,7 @@ def main() -> None:
             df_test,
         ) = LOAD.load_db_file()
 
+    print("Data Preparation\n")
     Train = data_preparation.Data_preparation(df_train)
     train_prep1 = Train.preparation_first()
     train_selec = Train.selection(train_prep1)
@@ -45,10 +46,12 @@ def main() -> None:
     test_prep2 = Test.preparation_second(test_selec)
     test = Test.preparation_dummies(test_prep2)
 
+    print("Models\n")
     Split = models.split(train)
     X_train, X_test, y_train, y_test = Split.train_split()
 
     if args.model_ensemble:
+        print("Model Ensemble\n")
         RF = models.Model_Ensemble(X_train, X_test, y_train, y_test)
 
         mv_clf = RF.model_cross()
@@ -63,7 +66,7 @@ def main() -> None:
                 "./predictions/prediction_titanic_RFC_new.csv", index=False
             )
     else:
-        # Deep Neural Netowork
+        print("Deep Neural Network\n")
         y_train = train.loc[:, "Survived"].to_numpy()
         features_train = train.drop(columns=["Survived"]).to_numpy()
         y_train = to_categorical(
