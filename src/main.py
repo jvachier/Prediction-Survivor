@@ -108,9 +108,8 @@ def main() -> None:
         test_result_NN = test.copy()
         NN = models.NN(features_train, y_train)
         modell_NN = NN.model_NN()
-        NN.fit_NN()
-
         print(modell_NN.summary())
+        NN.fit_NN()
 
         predictions = modell_NN.predict(x=test.to_numpy(), verbose=2)
         n_test, m_test = predictions.shape

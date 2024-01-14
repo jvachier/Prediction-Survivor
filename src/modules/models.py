@@ -172,7 +172,6 @@ class NN:
         self.modell_NN.add(Dense(units=256, activation="relu"))
         self.modell_NN.add(Dense(units=256, activation="relu"))
         # self.modell_NN.add(Dropout(0.20))
-        self.modell_NN.add(Dense(units=64, activation="relu"))
         self.modell_NN.add(Dense(units=128, activation="relu"))
         self.modell_NN.add(Dense(units=128, activation="relu"))
         self.modell_NN.add(Dropout(0.10))
@@ -185,7 +184,6 @@ class NN:
         self.modell_NN.compile(
             optimizer=Adam(learning_rate=1e-5),
             loss="binary_crossentropy",
-            # metrics=["binary_accuracy"],
             metrics=["accuracy"],
         )
         return self.modell_NN
@@ -194,7 +192,9 @@ class NN:
         scores_NN = []
         callback = EarlyStopping(monitor="val_loss", patience=50)
 
-        fold = StratifiedKFold(n_splits=10).split(self.X_train, self.y_train)
+        fold = StratifiedKFold(n_splits=10, shuffle=True, random_state=3).split(
+            self.X_train, self.y_train
+        )
 
         y_train_categorical = to_categorical(self.y_train, num_classes=2)
 
