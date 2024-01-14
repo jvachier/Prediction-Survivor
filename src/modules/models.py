@@ -64,7 +64,7 @@ class Model_Ensemble:
     y_train: list
     y_test: list
 
-    def model_cross(self) -> VotingClassifier:
+    def model_cross(self) -> object:
         clf_RFC = RandomForestClassifier(
             n_estimators=50,
             max_depth=10,
@@ -157,20 +157,25 @@ class Model_Ensemble:
 class NN:
     X_train: np.array
     y_train: list
-    X_test: np.array
-    y_test: list
-
+    n_xtrain: int = None
+    m_xtrain: list = None
     modell_NN: Sequential = None
 
-    def model_NN(self, n_xtrain: int) -> Sequential:
+    def __post_init__(self):
+        self.n_xtrain, self.m_xtrain = self.X_train.T.shape
+
+    def model_NN(self) -> Sequential:
         self.modell_NN = Sequential()
-        self.modell_NN.add(Dense(units=128, activation="relu", input_shape=(n_xtrain,)))
+        self.modell_NN.add(
+            Dense(units=512, activation="relu", input_shape=(self.n_xtrain,))
+        )
         self.modell_NN.add(Dense(units=256, activation="relu"))
         self.modell_NN.add(Dense(units=256, activation="relu"))
         # self.modell_NN.add(Dropout(0.20))
         self.modell_NN.add(Dense(units=64, activation="relu"))
         self.modell_NN.add(Dense(units=128, activation="relu"))
-        # self.modell_NN.add(Dropout(0.10))
+        self.modell_NN.add(Dense(units=128, activation="relu"))
+        self.modell_NN.add(Dropout(0.10))
         self.modell_NN.add(Dense(units=64, activation="relu"))
         self.modell_NN.add(Dense(units=64, activation="relu"))
         # self.modell_NN.add(Dropout(0.10))
@@ -185,23 +190,26 @@ class NN:
         )
         return self.modell_NN
 
-    def fit_NN(self, X_train: np.array, y_train: list) -> None:
+    def fit_NN(self) -> None:
         scores_NN = []
         callback = EarlyStopping(monitor="val_loss", patience=50)
 
-        fold = KFold(n_splits=5).split(X_train, y_train)
+        fold = StratifiedKFold(n_splits=10).split(self.X_train, self.y_train)
+
+        y_train_categorical = to_categorical(self.y_train, num_classes=2)
+
         for k, (train, test) in enumerate(fold):
             self.modell_NN.fit(
-                X_train[train],
-                y_train[train],
+                self.X_train[train],
+                y_train_categorical[train],
                 epochs=1500,
                 callbacks=[callback],
                 verbose=0,
                 validation_split=0.3,
             )
             score_NN = self.modell_NN.evaluate(
-                X_train[test],
-                y_train[test],
+                self.X_train[test],
+                y_train_categorical[test],
                 verbose=0,
             )
             scores_NN.append(score_NN)

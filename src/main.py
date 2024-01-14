@@ -54,6 +54,7 @@ def main() -> None:
         test_selec = Test.selection(test_prep1)
 
         if args.standardscaler:
+            print("Standarscaler\n")
             train_prep2 = Train.preparation_second_standardscaler(train_selec)
             train = Train.preparation_dummies_standardscaler(train_prep2)
 
@@ -73,6 +74,7 @@ def main() -> None:
             LOAD_DATA_test.save_dataframe(test)
     else:
         if args.standardscaler:
+            print("Standarscaler\n")
             train = LOAD_DATA_train_standardscaler.load_dataframe()
             test = LOAD_DATA_test_standardscaler.load_dataframe()
         else:
@@ -102,17 +104,11 @@ def main() -> None:
         print("Deep Neural Network\n")
         y_train = train.loc[:, "Survived"].to_numpy()
         features_train = train.drop(columns=["Survived"]).to_numpy()
-        y_train = to_categorical(
-            y_train, num_classes=2
-        )  # not to be used with StratifiedKFold
-        n_xtrain, m_xtrain = features_train.T.shape
-        # n_ytrain, m_xtrain = y_train.shape
 
         test_result_NN = test.copy()
-        NN = models.NN(X_train, y_train, X_test, y_test)
-        # NN.model_parameters()
-        modell_NN = NN.model_NN(n_xtrain)
-        NN.fit_NN(features_train, y_train)
+        NN = models.NN(features_train, y_train)
+        modell_NN = NN.model_NN()
+        NN.fit_NN()
 
         print(modell_NN.summary())
 
