@@ -1,3 +1,6 @@
+# Allow
+!requirements.txt
+
 # Ignore Mac system files
 .DS_store
 .dSYM
@@ -16,6 +19,7 @@
 *.keras
 *.pyc
 *.so
+*.pylintrc
 
 *data/
 *videos/
