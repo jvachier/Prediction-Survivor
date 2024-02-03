@@ -1,5 +1,5 @@
 # Allow
-#!requirements.txt
+!requirements.txt
 
 # Ignore Mac system files
 .DS_store
@@ -13,7 +13,7 @@
 *.html
 
 # Ignore all text files
-#*.txt
+*.txt
 *.bin
 *.h5
 *.keras
