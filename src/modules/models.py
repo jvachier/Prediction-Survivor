@@ -22,8 +22,6 @@ from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 
-
-
 import tensorflow as tf
 from keras.models import Sequential
 from keras.optimizers.legacy import (
@@ -59,6 +57,7 @@ class Model_Ensemble:
     y_train: list
     y_test: list
 
+
     def model_cross(self) -> object:
         clf_RFC = RandomForestClassifier(
             n_estimators=50,
@@ -66,8 +65,10 @@ class Model_Ensemble:
             random_state=1,
             n_jobs=4,
         )
+
         clf_adaboost = AdaBoostClassifier(
             n_estimators=100,
+            algorithm="SAMME",
             random_state=2,
         )
         clf_lr = LogisticRegression(solver="lbfgs", max_iter=10000, random_state=3)
@@ -132,13 +133,16 @@ class Model_Ensemble:
             pipe_knnc,
             mv_clf,
         ]
+
+        stratiKfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=3)
+
         for clf, label in zip(all_clf, clf_labels):
             scores = cross_val_score(
                 estimator=clf,
                 X=self.X_train,
                 y=self.y_train,
-                cv=20,
-                n_jobs=2,
+                cv=stratiKfold,
+                n_jobs=4,
                 scoring="roc_auc",
             )
             print(
