@@ -1,3 +1,6 @@
+# Allow
+#!requirements.txt
+
 # Ignore Mac system files
 .DS_store
 .dSYM
@@ -10,12 +13,13 @@
 *.html
 
 # Ignore all text files
-*.txt
+#*.txt
 *.bin
 *.h5
 *.keras
 *.pyc
 *.so
+*.pylintrc
 
 *data/
 *videos/
