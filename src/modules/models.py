@@ -68,6 +68,7 @@ class Model_Ensemble:
         )
         clf_adaboost = AdaBoostClassifier(
             n_estimators=100,
+            algorithm="SAMME",
             random_state=2,
         )
         clf_lr = LogisticRegression(solver="lbfgs", max_iter=10000, random_state=3)
@@ -132,13 +133,16 @@ class Model_Ensemble:
             pipe_knnc,
             mv_clf,
         ]
+
+        stratiKfold = StratifiedKFold(n_splits=10, shuffle=True, random_state=3)
+
         for clf, label in zip(all_clf, clf_labels):
             scores = cross_val_score(
                 estimator=clf,
                 X=self.X_train,
                 y=self.y_train,
-                cv=20,
-                n_jobs=2,
+                cv=stratiKfold,
+                n_jobs=4,
                 scoring="roc_auc",
             )
             print(
