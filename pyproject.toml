@@ -3,7 +3,7 @@ name = "Prediction Survival"
 version = "1.1.0"
 description = ""
 authors = ["Jeremy Vachier"]
-readme = "README"
+readme = "README.md"
 packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
@@ -16,6 +16,7 @@ tensorflow-macos = "^2.15.0"
 datetime = "^5.4"
 statsmodels = "^0.14.1"
 pylint = "^3.0.3"
+scikit-optimize = "^0.9.0"
 
 
 [build-system]

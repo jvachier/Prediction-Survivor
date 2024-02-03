@@ -1,3 +1,10 @@
+from dataclasses import dataclass
+
+from typing import Tuple
+
+import pandas as pd
+import numpy as np
+
 from sklearn.ensemble import (
     RandomForestClassifier,
     AdaBoostClassifier,
@@ -15,30 +22,18 @@ from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 
-from dataclasses import dataclass
 
-import pandas as pd
-import numpy as np
-
-from typing import Tuple
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.optimizers.legacy import (
+from keras.models import Sequential
+from keras.optimizers.legacy import (
     Adam,
-    SGD,
-    RMSprop,
-    Adagrad,
-    Adadelta,
-    Adamax,
-    Nadam,
 )
-from tensorflow.keras.layers import (
+from keras.layers import (
     Dense,
     Dropout,
 )
-from tensorflow.keras.utils import to_categorical
+from keras.utils import to_categorical
 from keras.callbacks import EarlyStopping
 
 
