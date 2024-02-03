@@ -1,26 +1,27 @@
-import pandas as pd
-import pickle
-
 from dataclasses import dataclass
 from typing import Tuple
 
+import pickle
+import pandas as pd
+
+
+
+
 
 @dataclass(slots=True)
-class Loading_files:
+class LoadingFiles:
     def load_save_df(
         self,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         df_train = pd.read_csv("../src/data/train.csv")
         df_test = pd.read_csv("../src/data/test.csv")
 
-        dbfile_train = open("./pickle_files/loading/train", "ab")
-        dbfile_test = open("./pickle_files/loading/test", "ab")
+        with open("./pickle_files/loading/train", "ab") as dbfile_train:
+            pickle.dump(df_train, dbfile_train)
 
-        pickle.dump(df_train, dbfile_train)
-        pickle.dump(df_test, dbfile_test)
+        with open("./pickle_files/loading/test", "ab") as dbfile_test:
+            pickle.dump(df_test, dbfile_test)
 
-        dbfile_train.close()
-        dbfile_test.close()
         return (
             df_train,
             df_test,
@@ -29,14 +30,11 @@ class Loading_files:
     def load_db_file(
         self,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        dbfile_train = open("./pickle_files/loading/train", "rb")
-        dbfile_test = open("./pickle_files/loading/test", "rb")
+        with open("./pickle_files/loading/train", "rb") as dbfile_train:
+            df_train = pickle.load(dbfile_train)
 
-        df_train = pickle.load(dbfile_train)
-        df_test = pickle.load(dbfile_test)
-
-        dbfile_train.close()
-        dbfile_test.close()
+        with open("./pickle_files/loading/test", "rb") as dbfile_test:
+            df_test = pickle.load(dbfile_test)
         return (
             df_train,
             df_test,
