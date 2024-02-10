@@ -25,3 +25,6 @@ jobs:
     - name: Black
       run: |
         make black
+    - name: Ruff
+      run: |
+        make ruff
