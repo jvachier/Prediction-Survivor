@@ -12,3 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: chartboost/ruff-action@v1
+        with:
+          args: --check src/
+          fix_args: --fix src/
+          format_args: --format src/
+          config: ruff.toml

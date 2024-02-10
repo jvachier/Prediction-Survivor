@@ -14,15 +14,12 @@ from sklearn.model_selection import (
     train_test_split,
     cross_val_score,
     StratifiedKFold,
-    KFold,
 )
-from sklearn.pipeline import make_pipeline, Pipeline
-from sklearn.decomposition import PCA
+from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression, SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.neighbors import KNeighborsClassifier
 
-import tensorflow as tf
 from keras.models import Sequential
 from keras.optimizers.legacy import (
     Adam,
@@ -56,7 +53,6 @@ class Model_Ensemble:
     X_test: np.array
     y_train: list
     y_test: list
-
 
     def model_cross(self) -> object:
         clf_RFC = RandomForestClassifier(

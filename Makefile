@@ -10,3 +10,5 @@ black:
 
 ruff:
 	ruff check src/
+	ruff check --fix src/
+	ruff format src/

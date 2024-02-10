@@ -7,6 +7,7 @@ from src.modules import data_preparation
 from src.modules import models
 from src.modules import loading
 
+
 def main() -> None:
     parser = ArgumentParser()
     parser.add_argument("--model_ensemble", action="store_true")
