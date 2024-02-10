@@ -11,9 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: chartboost/ruff-action@v1
-        with:
-          args: --check src/
-          fix_args: --fix src/
-          #args: --format src/
-          config: ruff.toml
+      - name: Ruff
+        run: |
+          make ruff
+      # - uses: chartboost/ruff-action@v1
+      #   with:
+      #     args: --check src/
+      #     fix_args: --fix src/
+      #     #args: --format src/
+      #     config: ruff.toml
