@@ -7,4 +7,6 @@ lint:
 
 black:
 	python -m black src/
-	
+
+ruff:
+	ruff check src/
