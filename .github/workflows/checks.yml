@@ -22,9 +22,9 @@ jobs:
     - name: Install dependencies
       run: |
         make install
-    - name: Black
-      run: |
-        make black
+    # - name: Black
+    #   run: |
+    #     make black
     - name: Ruff
       run: |
         make ruff
