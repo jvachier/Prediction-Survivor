@@ -1,14 +1,17 @@
-import pandas as pd
-import numpy as np
-import re
 from dataclasses import dataclass
 import pickle
+
+import re
+import pandas as pd
+import numpy as np
+
+
 
 from sklearn.preprocessing import StandardScaler
 
 
 @dataclass(slots=True)
-class Data_preparation:
+class DataPreparation:
     data: pd.DataFrame
 
     def preparation_first(self) -> pd.DataFrame:
@@ -23,7 +26,7 @@ class Data_preparation:
         df_data["Deck"] = df_data["Deck"].astype(int)
 
         titles = {"Mr": 1, "Miss": 2, "Mrs": 3, "Master": 4, "Rare": 5}
-        df_data["Title"] = df_data.Name.str.extract(" ([A-Za-z]+)\.", expand=False)
+        df_data["Title"] = df_data.Name.str.extract(" ([A-Za-z]+)", expand=False)
 
         df_data["Title"] = df_data["Title"].replace(
             [
@@ -145,20 +148,19 @@ class Data_preparation:
 
 
 @dataclass(slots=True)
-class Load_Save:
+class LoadSave:
     name: str
 
     def load_dataframe(self) -> pd.DataFrame:
-        dbfile_dataframe = open(
+        with open(
             "./pickle_files/data_preparation/data_set_" + str(self.name), "rb"
-        )
-        data_set = pickle.load(dbfile_dataframe)
-        dbfile_dataframe.close()
+        ) as dbfile_dataframe:
+            data_set = pickle.load(dbfile_dataframe)
         return data_set
 
     def save_dataframe(self, data_set: pd.DataFrame) -> None:
-        dbfile_dataframe = open(
+        with open(
             "./pickle_files/data_preparation/data_set_" + str(self.name), "ab"
-        )
-        pickle.dump(data_set, dbfile_dataframe)
-        dbfile_dataframe.close()
+        ) as dbfile_dataframe:
+            pickle.dump(data_set, dbfile_dataframe)
+                        

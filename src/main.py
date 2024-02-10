@@ -17,7 +17,7 @@ def main() -> None:
 
     print("Loading data\n")
 
-    load = loading.Loading_files()
+    load = loading.LoadingFiles()
 
     if os.path.isfile("./pickle_files/loading/train") is False:
         (
@@ -31,22 +31,22 @@ def main() -> None:
         ) = load.load_db_file()
 
     print("Data Preparation\n")
-    load_data_train = data_preparation.Load_Save("train")
-    load_data_test = data_preparation.Load_Save("test")
+    load_data_train = data_preparation.LoadSave("train")
+    load_data_test = data_preparation.LoadSave("test")
 
-    load_data_train_standardscaler = data_preparation.Load_Save("train_standardscaler")
-    load_data_test_standardscaler = data_preparation.Load_Save("test_standardscaler")
+    load_data_train_standardscaler = data_preparation.LoadSave("train_standardscaler")
+    load_data_test_standardscaler = data_preparation.LoadSave("test_standardscaler")
 
     if (
         os.path.isfile("./pickle_files/data_preparation/data_set_train")
         & os.path.isfile("./pickle_files/data_preparation/data_set_train_standarscaler")
         is False
     ):
-        train = data_preparation.Data_preparation(df_train)
+        train = data_preparation.DataPreparation(df_train)
         train_prep1 = train.preparation_first()
         train_selec = train.selection(train_prep1)
 
-        test = data_preparation.Data_preparation(df_test)
+        test = data_preparation.DataPreparation(df_test)
         test_prep1 = test.preparation_first()
         test_selec = test.selection(test_prep1)
 
@@ -79,12 +79,12 @@ def main() -> None:
             test_final = load_data_test.load_dataframe()
 
     print("Models\n")
-    Split = models.split(train_final)
+    Split = models.Split(train_final)
     x_train, x_test, y_train, y_test = Split.train_split()
 
     if args.model_ensemble:
         print("Model Ensemble\n")
-        voting = models.Model_Ensemble(x_train, x_test, y_train, y_test)
+        voting = models.ModelEnsemble(x_train, x_test, y_train, y_test)
 
         mv_clf = voting.model_cross()
 
@@ -103,12 +103,12 @@ def main() -> None:
         features_train = train_final.drop(columns=["Survived"]).to_numpy()
 
         test_result_nn = test_final.copy()
-        NN = models.NN(features_train, y_train)
-        modell_nn = NN.model_NN()
+        neural_network = models.NeuralNetwork(features_train, y_train)
+        modell_nn = neural_network.model_nn()
         print(modell_nn.summary())
-        NN.fit_NN()
+        neural_network.fit_nn()
 
-        predictions = modell_nn.predict(x=test.to_numpy(), verbose=2)
+        predictions = modell_nn.predict(x=test_final.to_numpy(), verbose=2)
         n_test, m_test = predictions.shape
         label = []
         for i in range(n_test):
