@@ -5,9 +5,6 @@ import pickle
 import pandas as pd
 
 
-
-
-
 @dataclass(slots=True)
 class LoadingFiles:
     def load_save_df(

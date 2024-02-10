@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as np
 
 
-
 from sklearn.preprocessing import StandardScaler
 
 
@@ -163,4 +162,3 @@ class LoadSave:
             "./pickle_files/data_preparation/data_set_" + str(self.name), "ab"
         ) as dbfile_dataframe:
             pickle.dump(data_set, dbfile_dataframe)
-                        

@@ -54,7 +54,6 @@ class ModelEnsemble:
     y_train: list
     y_test: list
 
-
     def model_cross(self) -> object:
         clf_rfc = RandomForestClassifier(
             n_estimators=50,
@@ -83,16 +82,8 @@ class ModelEnsemble:
 
         clf_knnc = KNeighborsClassifier(n_neighbors=50)
 
-        pipe_rfc = Pipeline(
-            [
-                ["rfc", clf_rfc]
-            ]
-        )
-        pipe_adaboost = Pipeline(
-            [
-                ["adaboost", clf_adaboost]
-            ]
-        )
+        pipe_rfc = Pipeline([["rfc", clf_rfc]])
+        pipe_adaboost = Pipeline([["adaboost", clf_adaboost]])
         pipe_lr = Pipeline([["lr", clf_lr]])
         pipe_dt = Pipeline([["dt", clf_dt]])
         pipe_sgdv = Pipeline([["sgdc", clf_sgdc]])

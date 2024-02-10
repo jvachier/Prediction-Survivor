@@ -7,6 +7,7 @@ from src.modules import data_preparation
 from src.modules import models
 from src.modules import loading
 
+
 def main() -> None:
     parser = ArgumentParser()
     parser.add_argument("--model_ensemble", action="store_true")
@@ -78,8 +79,8 @@ def main() -> None:
             test_final = load_data_test.load_dataframe()
 
     print("Models\n")
-    Split = models.Split(train_final)
-    x_train, x_test, y_train, y_test = Split.train_split()
+    split = models.Split(train_final)
+    x_train, x_test, y_train, y_test = split.train_split()
 
     if args.model_ensemble:
         print("Model Ensemble\n")
