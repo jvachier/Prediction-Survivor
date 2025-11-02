@@ -10,9 +10,11 @@ import numpy as np
 
 
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from src.config import get_config
 
 # Define project root for reliable path resolution
 PROJECT_ROOT = Path(__file__).parent.parent.parent
+config = get_config()
 
 
 @dataclass(slots=True)
@@ -183,7 +185,7 @@ class LoadSave:
 
     def load_dataframe(self) -> pd.DataFrame:
         """Load a cached data frame from joblib storage."""
-        pickle_dir = PROJECT_ROOT / "pickle_files/data_preparation"
+        pickle_dir = PROJECT_ROOT / config.get("paths.pickle_dir") / "data_preparation"
         pickle_path = pickle_dir / f"data_set_{self.name}.joblib"
 
         data_set = joblib.load(pickle_path)
@@ -191,7 +193,7 @@ class LoadSave:
 
     def save_dataframe(self, data_set: pd.DataFrame) -> None:
         """Persist a data frame to joblib storage for reuse."""
-        pickle_dir = PROJECT_ROOT / "pickle_files/data_preparation"
+        pickle_dir = PROJECT_ROOT / config.get("paths.pickle_dir") / "data_preparation"
         pickle_dir.mkdir(parents=True, exist_ok=True)
         pickle_path = pickle_dir / f"data_set_{self.name}.joblib"
 

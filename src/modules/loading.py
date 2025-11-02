@@ -6,9 +6,11 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
+from src.config import get_config
 
 # Define project root for reliable path resolution
 PROJECT_ROOT = Path(__file__).parent.parent.parent
+config = get_config()
 
 
 @dataclass(slots=True)
@@ -19,13 +21,13 @@ class LoadingFiles:
         self,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Load raw CSV files and save them to disk as joblib backups."""
-        train_csv = PROJECT_ROOT / "src/data/train.csv"
-        test_csv = PROJECT_ROOT / "src/data/test.csv"
+        train_csv = PROJECT_ROOT / config.get("paths.data_dir") / "train.csv"
+        test_csv = PROJECT_ROOT / config.get("paths.data_dir") / "test.csv"
 
         df_train = pd.read_csv(train_csv)
         df_test = pd.read_csv(test_csv)
 
-        pickle_dir = PROJECT_ROOT / "pickle_files/loading"
+        pickle_dir = PROJECT_ROOT / config.get("paths.pickle_dir") / "loading"
         pickle_dir.mkdir(parents=True, exist_ok=True)
 
         # Use joblib for efficient serialization with compression
@@ -41,7 +43,7 @@ class LoadingFiles:
         self,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Load previously cached training and test data sets."""
-        pickle_dir = PROJECT_ROOT / "pickle_files/loading"
+        pickle_dir = PROJECT_ROOT / config.get("paths.pickle_dir") / "loading"
 
         # Load from joblib files
         df_train = joblib.load(pickle_dir / "train.joblib")

@@ -117,6 +117,7 @@ neural_network:
     batch_size: 32
     epochs: 1000
     validation_split: 0.2
+    verbose: 0
     
   callbacks:
     early_stopping:

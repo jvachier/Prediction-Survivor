@@ -26,6 +26,7 @@ poetry.lock
 *.h5
 *.keras
 
+# Ignore data and prediction files but keep directory structure
 *data/
 *videos/
 *pickle_files/
