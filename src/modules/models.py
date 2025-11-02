@@ -2,7 +2,7 @@
 
 import logging
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -235,8 +235,8 @@ class NeuralNetwork:
 
     x_train: np.ndarray
     y_train: np.ndarray
-    n_xtrain: int = None
-    modell_nn: Model = None
+    n_xtrain: Optional[int] = None
+    modell_nn: Optional[Model] = None
 
     def __post_init__(self) -> None:
         """Capture input dimensionality after initialisation."""
