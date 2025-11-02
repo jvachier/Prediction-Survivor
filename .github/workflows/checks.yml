@@ -5,6 +5,7 @@ on:
       - main
     paths:
       - 'src/**'
+      - 'tests/**'
       - 'pyproject.toml'
       - '.github/workflows/checks.yml'
   pull_request:
@@ -12,6 +13,7 @@ on:
       - main
     paths:
       - 'src/**'
+      - 'tests/**'
       - 'pyproject.toml'
       - '.github/workflows/checks.yml'
 jobs:
@@ -36,3 +38,5 @@ jobs:
         run: uv run ruff format --check src/
       - name: Pylint
         run: uv run pylint --disable=R,C src/
+      - name: Run Tests
+        run: uv run pytest tests/ -v --cov=src --cov-report=term-missing

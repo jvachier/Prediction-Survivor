@@ -9,11 +9,9 @@ dependencies = [
 	"numpy>=1.26.2",
 	"pandas>=2.1.4",
 	"scikit-learn>=1.5.0",
-	"tensorflow-io-gcs-filesystem>=0.34.0",
-	"tensorflow-macos>=2.15.0",
-	"datetime>=5.4",
-	"statsmodels>=0.14.1",
-	"scikit-optimize>=0.9.0",
+	"tensorflow>=2.15.0; sys_platform != 'darwin'",
+	"tensorflow-macos>=2.15.0; sys_platform == 'darwin'",
+	"tensorflow-io-gcs-filesystem>=0.34.0; sys_platform == 'darwin'",
 ]
 
 [dependency-groups]
@@ -21,6 +19,8 @@ dev = [
 	"black>=24.3.0",
 	"ruff>=0.2.1",
 	"pylint>=3.0.3",
+	"pytest>=7.4.0",
+	"pytest-cov>=4.1.0",
 ]
 
 [build-system]

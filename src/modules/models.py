@@ -1,37 +1,32 @@
 """Model utilities for ensemble classifiers and neural networks."""
 
+import logging
 from dataclasses import dataclass
-
 from typing import Tuple
 
-import pandas as pd
 import numpy as np
-
+import pandas as pd
+from keras.callbacks import EarlyStopping
+from keras.layers import Dense, Dropout
+from keras.models import Sequential
+from keras.optimizers import Adam
+from keras.utils import to_categorical
 from sklearn.ensemble import (
-    RandomForestClassifier,
     AdaBoostClassifier,
+    RandomForestClassifier,
     VotingClassifier,
 )
-from sklearn.model_selection import (
-    train_test_split,
-    cross_val_score,
-    StratifiedKFold,
-)
-from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression, SGDClassifier
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import (
+    StratifiedKFold,
+    cross_val_score,
+    train_test_split,
+)
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import Pipeline
+from sklearn.tree import DecisionTreeClassifier
 
-from keras.models import Sequential
-from keras.optimizers.legacy import (
-    Adam,
-)
-from keras.layers import (
-    Dense,
-    Dropout,
-)
-from keras.utils import to_categorical
-from keras.callbacks import EarlyStopping
+logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -40,7 +35,7 @@ class Split:
 
     train: pd.DataFrame
 
-    def train_split(self) -> Tuple[np.array, np.array, list, list]:
+    def train_split(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Split the training data into hold-out train and validation sets."""
         x_train, x_test, y_train, y_test = train_test_split(
             self.train.drop(columns=["Survived"]).values,
@@ -56,12 +51,12 @@ class Split:
 class ModelEnsemble:
     """Train a soft-voting ensemble comprised of classic ML estimators."""
 
-    x_train: np.array
-    x_test: np.array
-    y_train: list
-    y_test: list
+    x_train: np.ndarray
+    x_test: np.ndarray
+    y_train: np.ndarray
+    y_test: np.ndarray
 
-    def model_cross(self) -> object:
+    def model_cross(self) -> VotingClassifier:
         """Perform cross validation on individual estimators and fit the ensemble."""
         clf_rfc = RandomForestClassifier(
             n_estimators=50,
@@ -139,8 +134,11 @@ class ModelEnsemble:
                 n_jobs=4,
                 scoring="roc_auc",
             )
-            print(
-                "ROC AUC: %0.2f (+/- %0.2f) [%s]" % (scores.mean(), scores.std(), label)
+            logger.info(
+                "ROC AUC: %0.2f (+/- %0.2f) [%s]",
+                scores.mean(),
+                scores.std(),
+                label,
             )
         mv_clf.fit(self.x_train, self.y_train)
         return mv_clf
@@ -150,13 +148,13 @@ class ModelEnsemble:
 class NeuralNetwork:
     """Define and train a dense neural network for Titanic survival prediction."""
 
-    x_train: np.array
-    y_train: list
+    x_train: np.ndarray
+    y_train: np.ndarray
     n_xtrain: int = None
-    m_xtrain: list = None
+    m_xtrain: int = None
     modell_nn: Sequential = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Capture input dimensionality after initialisation."""
         self.n_xtrain, self.m_xtrain = self.x_train.T.shape
 
@@ -211,7 +209,9 @@ class NeuralNetwork:
                 verbose=0,
             )
             scores_nn.append(score_nn)
-            print(
-                "NN - Fold: %2d, Acc.: %.3f, Loss: %.3f"
-                % (k + 1, score_nn[1], score_nn[0])
+            logger.info(
+                "NN - Fold: %2d, Acc.: %.3f, Loss: %.3f",
+                k + 1,
+                score_nn[1],
+                score_nn[0],
             )
