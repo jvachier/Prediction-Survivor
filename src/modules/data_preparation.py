@@ -19,15 +19,36 @@ config = get_config()
 
 @dataclass(slots=True)
 class DataPreparation:
-    """Encapsulate feature engineering steps for Titanic data frames."""
+    """Encapsulate feature engineering steps for Titanic data frames.
+
+    This class handles the complete data preparation pipeline including:
+    - Title extraction from names
+    - Deck extraction from cabin information
+    - Feature engineering (relatives, fare per person, age classes)
+    - Categorical encoding and standardization
+
+    Attributes:
+        data: Input DataFrame with raw Titanic passenger data
+    """
 
     data: pd.DataFrame
 
     def preparation_first(self) -> pd.DataFrame:
         """Extract title and deck features and clean categorical columns.
 
+        This is the first stage of data preparation that:
+        - Validates required columns exist
+        - Extracts passenger titles from names (Mr, Mrs, Miss, Master, Rare)
+        - Maps cabin letters to deck numbers (A-G, U for unknown)
+        - Fills missing age values with median
+        - Fills missing fare values with median
+        - Maps sex to Title for consistency
+
+        Returns:
+            DataFrame with extracted features (Title, Deck) and cleaned data
+
         Raises:
-            ValueError: If required columns are missing
+            ValueError: If required columns are missing from input data
         """
         # Validate required columns exist
         required_cols = [
@@ -86,6 +107,17 @@ class DataPreparation:
         return df_data
 
     def selection(self, df_data: pd.DataFrame) -> pd.DataFrame:
+        """Select relevant columns for model training.
+
+        Drops unnecessary columns and keeps only features useful for prediction.
+        Removes: Ticket, PassengerId, Cabin, Name
+
+        Args:
+            df_data: DataFrame after first preparation stage
+
+        Returns:
+            DataFrame with only selected feature columns
+        """
         """Select relevant attributes and impute missing values."""
         df_selected = df_data.drop(columns=["Cabin", "Ticket"])
 
@@ -100,7 +132,23 @@ class DataPreparation:
         return df_selected
 
     def preparation_second(self, df_selected: pd.DataFrame) -> pd.DataFrame:
-        """Bin numerical features and derive helper columns for models."""
+        """Bin numerical features and derive helper columns for models.
+
+        This is the second stage of preparation (for non-StandardScaler models) that:
+        - Maps categorical values (Embarked, Sex)
+        - Calculates family-related features (relatives, not_alone)
+        - Calculates Fare_Per_Person BEFORE binning (fixes division bug)
+        - Bins Age into 7 categories
+        - Bins Fare into 6 categories
+        - Bins Fare_Per_Person into 5 categories
+        - Creates Age_Class interaction feature
+
+        Args:
+            df_selected: DataFrame after column selection
+
+        Returns:
+            DataFrame with binned features and derived columns
+        """
         df_pre2 = df_selected.copy()
         # Map Embarked, filling unmapped values (0) with a default
         df_pre2["Embarked"] = df_pre2["Embarked"].map({"S": 0, "C": 1, "Q": 2})
@@ -140,7 +188,19 @@ class DataPreparation:
         return df_pre2
 
     def preparation_dummies(self, df_pre2: pd.DataFrame) -> pd.DataFrame:
-        """Expand categorical features into indicator columns."""
+        """Expand categorical features into indicator columns.
+
+        Applies one-hot encoding to categorical columns using scikit-learn's
+        OneHotEncoder. Drops the first category to avoid multicollinearity.
+
+        Encoded columns: Title, Pclass, Age, Embarked, Fare
+
+        Args:
+            df_pre2: DataFrame after second preparation stage (with binned features)
+
+        Returns:
+            DataFrame with one-hot encoded categorical features
+        """
         encoder = OneHotEncoder(drop="first", sparse_output=False, dtype=int)
         categorical_cols = ["Title", "Pclass", "Age", "Embarked", "Fare"]
 
@@ -162,7 +222,21 @@ class DataPreparation:
     def preparation_second_standardscaler(
         self, df_selected: pd.DataFrame
     ) -> pd.DataFrame:
-        """Scale numerical features while keeping core transformations consistent."""
+        """Scale numerical features while keeping core transformations consistent.
+
+        This is the StandardScaler variant of preparation_second, used for neural networks.
+        Key differences from preparation_second:
+        - Calculates Fare_Per_Person BEFORE scaling (fixes division bug)
+        - Applies StandardScaler to Age, Fare, and Fare_Per_Person (z-score normalization)
+        - Does NOT bin numerical features
+        - Creates Age_Class interaction from scaled values
+
+        Args:
+            df_selected: DataFrame after column selection
+
+        Returns:
+            DataFrame with standardized numerical features (mean=0, std=1)
+        """
         df_pre2 = df_selected.copy()
         # Map Embarked, filling unmapped values (0) with a default
         df_pre2["Embarked"] = df_pre2["Embarked"].map({"S": 0, "C": 1, "Q": 2})
@@ -186,7 +260,17 @@ class DataPreparation:
         return df_pre2
 
     def preparation_dummies_standardscaler(self, df_pre2: pd.DataFrame) -> pd.DataFrame:
-        """One-hot encode scaled data set variant."""
+        """One-hot encode scaled data set variant.
+
+        Applies one-hot encoding for use with StandardScaler-prepared data.
+        Encodes: Title, Pclass, Embarked (no Age/Fare as they're continuous)
+
+        Args:
+            df_pre2: DataFrame after StandardScaler preparation
+
+        Returns:
+            DataFrame with one-hot encoded categorical features (for NN models)
+        """
         encoder = OneHotEncoder(drop="first", sparse_output=False, dtype=int)
         categorical_cols = ["Title", "Pclass", "Embarked"]
 
@@ -208,12 +292,26 @@ class DataPreparation:
 
 @dataclass(slots=True)
 class LoadSave:
-    """Handle persistence of pre-processed data frames."""
+    """Handle persistence of pre-processed data frames.
+
+    Provides methods to save and load preprocessed DataFrames using joblib
+    compression for efficient storage and fast loading.
+
+    Attributes:
+        name: Identifier for the dataset (e.g., "train", "test", "train_standardscaler")
+    """
 
     name: str
 
     def load_dataframe(self) -> pd.DataFrame:
-        """Load a cached data frame from joblib storage."""
+        """Load a cached data frame from joblib storage.
+
+        Returns:
+            Previously saved DataFrame
+
+        Raises:
+            FileNotFoundError: If the cached file doesn't exist
+        """
         pickle_dir = PROJECT_ROOT / config.get("paths.pickle_dir") / "data_preparation"
         pickle_path = pickle_dir / f"data_set_{self.name}.joblib"
 
@@ -221,7 +319,13 @@ class LoadSave:
         return data_set
 
     def save_dataframe(self, data_set: pd.DataFrame) -> None:
-        """Persist a data frame to joblib storage for reuse."""
+        """Persist a data frame to joblib storage for reuse.
+
+        Saves with compression level 3 (good balance of speed and size).
+
+        Args:
+            data_set: DataFrame to save
+        """
         pickle_dir = PROJECT_ROOT / config.get("paths.pickle_dir") / "data_preparation"
         pickle_dir.mkdir(parents=True, exist_ok=True)
         pickle_path = pickle_dir / f"data_set_{self.name}.joblib"
