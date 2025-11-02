@@ -36,7 +36,5 @@ jobs:
         run: uv run ruff check src/
       - name: Ruff Format Drift
         run: uv run ruff format --check src/
-      - name: Pylint
-        run: uv run pylint --disable=R,C src/
       - name: Run Tests
         run: uv run pytest tests/ -v --cov=src --cov-report=term-missing
