@@ -1,23 +1,38 @@
+"""Utility helpers for loading Titanic CSV inputs and caching them."""
+
 from dataclasses import dataclass
 from typing import Tuple
+from pathlib import Path
 
-import pickle
+import joblib
 import pandas as pd
+from src.config import get_config
+
+# Define project root for reliable path resolution
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+config = get_config()
 
 
 @dataclass(slots=True)
 class LoadingFiles:
+    """Load training and test data sets and persist cached copies."""
+
     def load_save_df(
         self,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        df_train = pd.read_csv("../src/data/train.csv")
-        df_test = pd.read_csv("../src/data/test.csv")
+        """Load raw CSV files and save them to disk as joblib backups."""
+        train_csv = PROJECT_ROOT / config.get("paths.data_dir") / "train.csv"
+        test_csv = PROJECT_ROOT / config.get("paths.data_dir") / "test.csv"
 
-        with open("./pickle_files/loading/train", "ab") as dbfile_train:
-            pickle.dump(df_train, dbfile_train)
+        df_train = pd.read_csv(train_csv)
+        df_test = pd.read_csv(test_csv)
 
-        with open("./pickle_files/loading/test", "ab") as dbfile_test:
-            pickle.dump(df_test, dbfile_test)
+        pickle_dir = PROJECT_ROOT / config.get("paths.pickle_dir") / "loading"
+        pickle_dir.mkdir(parents=True, exist_ok=True)
+
+        # Use joblib for efficient serialization with compression
+        joblib.dump(df_train, pickle_dir / "train.joblib", compress=3)
+        joblib.dump(df_test, pickle_dir / "test.joblib", compress=3)
 
         return (
             df_train,
@@ -27,11 +42,13 @@ class LoadingFiles:
     def load_db_file(
         self,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        with open("./pickle_files/loading/train", "rb") as dbfile_train:
-            df_train = pickle.load(dbfile_train)
+        """Load previously cached training and test data sets."""
+        pickle_dir = PROJECT_ROOT / config.get("paths.pickle_dir") / "loading"
 
-        with open("./pickle_files/loading/test", "rb") as dbfile_test:
-            df_test = pickle.load(dbfile_test)
+        # Load from joblib files
+        df_train = joblib.load(pickle_dir / "train.joblib")
+        df_test = joblib.load(pickle_dir / "test.joblib")
+
         return (
             df_train,
             df_test,

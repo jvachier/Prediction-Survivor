@@ -1,0 +1,147 @@
+# Configuration file for Titanic Survival Prediction Models
+
+# Global settings
+global:
+  random_state: 42
+  n_jobs: 4
+  test_size: 0.20
+  cv_folds: 10
+  cv_shuffle: true
+
+# Data preparation settings
+data_preparation:
+  age_bins: [-inf, 11, 18, 22, 27, 33, 40, inf]
+  fare_bins: [-inf, 7.91, 14.454, 31, 99, 250, inf]
+  impute_age_distribution: true
+  random_seed_age: 0
+
+# Model Ensemble settings
+model_ensemble:
+  scoring_metric: "roc_auc"
+  
+  random_forest:
+    n_estimators: 50
+    max_depth: 10
+    random_state: 1
+    
+  adaboost:
+    n_estimators: 100
+    random_state: 2
+    
+  logistic_regression:
+    solver: "lbfgs"
+    max_iter: 10000
+    random_state: 3
+    
+  decision_tree:
+    max_depth: 10
+    max_features: "sqrt"
+    random_state: 5
+    
+  sgd_classifier:
+    loss: "log_loss"
+    max_iter: 10000
+    learning_rate: "adaptive"
+    eta0: 0.0001
+    random_state: 4
+    
+  knn:
+    n_neighbors: 50
+    
+  xgboost:
+    n_estimators: 100
+    max_depth: 5
+    learning_rate: 0.1
+    random_state: 6
+    eval_metric: "logloss"
+    
+  lightgbm:
+    n_estimators: 100
+    max_depth: 5
+    learning_rate: 0.1
+    random_state: 7
+    verbose: -1
+    
+  catboost:
+    iterations: 100
+    depth: 5
+    learning_rate: 0.1
+    random_state: 8
+    verbose: 0
+    
+  stacking:
+    cv: 5
+    final_estimator:
+      solver: "lbfgs"
+      max_iter: 10000
+
+# Neural Network settings
+neural_network:
+  architecture:
+    layer_1:
+      units: 256
+      activation: "gelu"
+      l2_regularization: 0.001
+      dropout: 0.3
+      batch_normalization: true
+      
+    layer_2:
+      units: 128
+      activation: "gelu"
+      l2_regularization: 0.001
+      dropout: 0.3
+      batch_normalization: true
+      
+    layer_3:
+      units: 64
+      activation: "gelu"
+      l2_regularization: 0.001
+      dropout: 0.2
+      batch_normalization: true
+      
+    layer_4:
+      units: 32
+      activation: "gelu"
+      l2_regularization: 0.001
+      dropout: 0.2
+      batch_normalization: true
+      
+    output:
+      units: 1
+      activation: "sigmoid"
+  
+  training:
+    optimizer: "adam"
+    learning_rate: 0.001
+    loss: "binary_crossentropy"
+    batch_size: 32
+    epochs: 1000
+    validation_split: 0.2
+    verbose: 0
+    
+  callbacks:
+    early_stopping:
+      monitor: "val_loss"
+      patience: 50
+      restore_best_weights: true
+      verbose: 0
+      
+    reduce_lr:
+      monitor: "val_loss"
+      factor: 0.5
+      patience: 20
+      min_lr: 0.0000001
+      verbose: 0
+  
+  metrics:
+    - "accuracy"
+    - "auc"
+    - "precision"
+    - "recall"
+
+# Paths
+paths:
+  data_dir: "src/data"
+  pickle_dir: "pickle_files"
+  predictions_dir: "src/predictions"
+  model_dir: "pickle_files/model"
