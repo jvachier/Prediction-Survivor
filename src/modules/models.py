@@ -39,10 +39,10 @@ config = get_config()
 @dataclass(slots=True)
 class Split:
     """Utility class to create train/test splits for the Titanic dataset.
-    
+
     Creates stratified train/validation splits to ensure balanced class
     distribution for reliable model evaluation.
-    
+
     Attributes:
         train: DataFrame with Survived column and features
     """
@@ -54,9 +54,9 @@ class Split:
     ) -> Tuple[pd.DataFrame, pd.DataFrame, np.ndarray, np.ndarray]:
         """Split the training data into hold-out train and validation sets.
 
-        Uses stratified splitting to maintain class balance. Returns DataFrames 
+        Uses stratified splitting to maintain class balance. Returns DataFrames
         for X to preserve feature names for tree-based models.
-        
+
         Returns:
             Tuple of (X_train, X_test, y_train, y_test) where:
                 - X_train, X_test are DataFrames with features
@@ -78,16 +78,16 @@ class Split:
 @dataclass(slots=True)
 class ModelEnsemble:
     """Train a stacking ensemble comprised of 9 classic ML estimators.
-    
+
     Combines multiple base models using StackingClassifier:
     - Random Forest, AdaBoost, Logistic Regression, Decision Tree
     - SGD Classifier, K-Nearest Neighbors, XGBoost, LightGBM, CatBoost
-    
+
     Meta-learner: Logistic Regression
-    
+
     Attributes:
         x_train: Training features DataFrame
-        x_test: Validation features DataFrame  
+        x_test: Validation features DataFrame
         y_train: Training labels array
         y_test: Validation labels array
     """
@@ -99,11 +99,11 @@ class ModelEnsemble:
 
     def model_cross(self) -> StackingClassifier:
         """Perform cross validation on individual estimators and fit the stacking ensemble.
-        
+
         Each base model is evaluated using stratified K-fold cross-validation
         with ROC-AUC scoring. The stacking classifier is then trained on the
         full training set.
-        
+
         Returns:
             Fitted StackingClassifier ready for predictions
         """
@@ -266,15 +266,15 @@ class ModelEnsemble:
 @dataclass(slots=True)
 class NeuralNetwork:
     """Define and train a dense neural network for Titanic survival prediction.
-    
+
     Implements a deep feedforward network using Keras Functional API with:
     - 4 hidden layers (256→128→64→32 units)
     - Batch normalization and dropout for regularization
     - L2 weight regularization
     - Early stopping and learning rate reduction callbacks
-    
+
     Architecture designed for binary classification (survived vs died).
-    
+
     Attributes:
         x_train: Training features as numpy array
         y_train: Training labels as numpy array (0 or 1)
@@ -293,14 +293,14 @@ class NeuralNetwork:
 
     def model_nn(self) -> Model:
         """Build and compile the neural network using Functional API.
-        
+
         Creates a deep network with:
         - Input layer matching feature count
         - 4 dense layers with BatchNorm, Dropout, and L2 regularization
         - Binary output with sigmoid activation
         - Adam optimizer with configurable learning rate
         - Metrics: accuracy, AUC, precision, recall
-        
+
         Returns:
             Compiled Keras Model ready for training
         """
@@ -378,15 +378,15 @@ class NeuralNetwork:
 
     def fit_nn(self) -> None:
         """Train the neural network with early stopping and learning rate reduction.
-        
+
         Trains using stratified K-fold cross-validation with callbacks:
         - EarlyStopping: Stops if validation loss doesn't improve
         - ReduceLROnPlateau: Reduces learning rate when stuck
-        
+
         Training configuration is loaded from config.yaml including:
         - epochs, batch_size, validation_split
         - callback parameters (patience, factors, etc.)
-        
+
         Logs performance metrics (loss, accuracy, AUC, precision, recall) for each fold.
         """
         scores_nn = []

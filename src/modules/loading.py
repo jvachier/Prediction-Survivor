@@ -16,7 +16,7 @@ config = get_config()
 @dataclass(slots=True)
 class LoadingFiles:
     """Load training and test data sets and persist cached copies.
-    
+
     This class handles loading Titanic CSV files and caching them as joblib
     files for faster subsequent loads.
     """
@@ -25,13 +25,13 @@ class LoadingFiles:
         self,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Load raw CSV files and save them to disk as joblib backups.
-        
+
         Reads the train.csv and test.csv files from the data directory,
         then saves compressed copies using joblib for faster future loading.
-        
+
         Returns:
             Tuple containing (train_dataframe, test_dataframe)
-            
+
         Raises:
             FileNotFoundError: If CSV files don't exist in the data directory
         """
@@ -57,13 +57,13 @@ class LoadingFiles:
         self,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """Load previously cached training and test data sets.
-        
+
         Loads dataframes from joblib-compressed files created by load_save_df().
         This is significantly faster than reading from CSV.
-        
+
         Returns:
             Tuple containing (train_dataframe, test_dataframe)
-            
+
         Raises:
             FileNotFoundError: If joblib cache files don't exist
         """
