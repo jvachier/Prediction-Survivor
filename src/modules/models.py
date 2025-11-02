@@ -1,3 +1,5 @@
+"""Model utilities for ensemble classifiers and neural networks."""
+
 from dataclasses import dataclass
 
 from typing import Tuple
@@ -34,9 +36,12 @@ from keras.callbacks import EarlyStopping
 
 @dataclass(slots=True)
 class Split:
+    """Utility class to create train/test splits for the Titanic dataset."""
+
     train: pd.DataFrame
 
     def train_split(self) -> Tuple[np.array, np.array, list, list]:
+        """Split the training data into hold-out train and validation sets."""
         x_train, x_test, y_train, y_test = train_test_split(
             self.train.drop(columns=["Survived"]).values,
             self.train["Survived"].values,
@@ -49,12 +54,15 @@ class Split:
 
 @dataclass(slots=True)
 class ModelEnsemble:
+    """Train a soft-voting ensemble comprised of classic ML estimators."""
+
     x_train: np.array
     x_test: np.array
     y_train: list
     y_test: list
 
     def model_cross(self) -> object:
+        """Perform cross validation on individual estimators and fit the ensemble."""
         clf_rfc = RandomForestClassifier(
             n_estimators=50,
             max_depth=10,
@@ -140,6 +148,8 @@ class ModelEnsemble:
 
 @dataclass(slots=True)
 class NeuralNetwork:
+    """Define and train a dense neural network for Titanic survival prediction."""
+
     x_train: np.array
     y_train: list
     n_xtrain: int = None
@@ -147,9 +157,11 @@ class NeuralNetwork:
     modell_nn: Sequential = None
 
     def __post_init__(self):
+        """Capture input dimensionality after initialisation."""
         self.n_xtrain, self.m_xtrain = self.x_train.T.shape
 
     def model_nn(self) -> Sequential:
+        """Build and compile the sequential neural network architecture."""
         self.modell_nn = Sequential()
         self.modell_nn.add(
             Dense(units=512, activation="relu", input_shape=(self.n_xtrain,))
@@ -174,6 +186,7 @@ class NeuralNetwork:
         return self.modell_nn
 
     def fit_nn(self) -> None:
+        """Train the neural network with early stopping across cross-validation folds."""
         scores_nn = []
         callback = EarlyStopping(monitor="val_loss", patience=50)
 

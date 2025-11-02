@@ -1,19 +1,28 @@
+"""Utilities for preparing Titanic data sets for modelling."""
+
 from dataclasses import dataclass
 import pickle
+from pathlib import Path
 
 import re
 import pandas as pd
 import numpy as np
 
 
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+
+# Define project root for reliable path resolution
+PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 
 @dataclass(slots=True)
 class DataPreparation:
+    """Encapsulate feature engineering steps for Titanic data frames."""
+
     data: pd.DataFrame
 
     def preparation_first(self) -> pd.DataFrame:
+        """Extract title and deck features and clean categorical columns."""
         df_data = self.data.copy()
         deck = {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5, "F": 6, "G": 7, "U": 8}
         df_data["Cabin"] = df_data["Cabin"].fillna("U0")
@@ -55,6 +64,7 @@ class DataPreparation:
         return df_data
 
     def selection(self, df_data: pd.DataFrame) -> pd.DataFrame:
+        """Select relevant attributes and impute missing values."""
         df_selected = df_data.drop(columns=["Cabin", "Ticket"])
 
         rng = np.random.default_rng(0)
@@ -68,6 +78,7 @@ class DataPreparation:
         return df_selected
 
     def preparation_second(self, df_selected: pd.DataFrame) -> pd.DataFrame:
+        """Bin numerical features and derive helper columns for models."""
         df_pre2 = df_selected.copy()
         df_pre2["Embarked"] = df_pre2["Embarked"].replace(["S", "C", "Q"], [0, 1, 2])
         df_pre2["Sex"] = df_pre2["Sex"].replace(["female", "male"], [0, 1])
@@ -102,17 +113,29 @@ class DataPreparation:
         return df_pre2
 
     def preparation_dummies(self, df_pre2: pd.DataFrame) -> pd.DataFrame:
-        df_dummies = pd.get_dummies(
-            df_pre2,
-            columns=["Title", "Pclass", "Age", "Embarked", "Fare"],
-            drop_first=True,
-            dtype=int,
+        """Expand categorical features into indicator columns."""
+        encoder = OneHotEncoder(drop="first", sparse_output=False, dtype=int)
+        categorical_cols = ["Title", "Pclass", "Age", "Embarked", "Fare"]
+
+        # Fit and transform the categorical columns
+        encoded_array = encoder.fit_transform(df_pre2[categorical_cols])
+
+        # Get feature names for the encoded columns
+        feature_names = encoder.get_feature_names_out(categorical_cols)
+
+        # Create a DataFrame with encoded columns
+        encoded_df = pd.DataFrame(
+            encoded_array, columns=feature_names, index=df_pre2.index
         )
+
+        # Drop original categorical columns and concatenate encoded ones
+        df_dummies = df_pre2.drop(columns=categorical_cols).join(encoded_df)
         return df_dummies
 
     def preparation_second_standardscaler(
         self, df_selected: pd.DataFrame
     ) -> pd.DataFrame:
+        """Scale numerical features while keeping core transformations consistent."""
         df_pre2 = df_selected.copy()
         df_pre2["Embarked"] = df_pre2["Embarked"].replace(["S", "C", "Q"], [0, 1, 2])
         df_pre2["Sex"] = df_pre2["Sex"].replace(["female", "male"], [0, 1])
@@ -137,28 +160,46 @@ class DataPreparation:
         return df_pre2
 
     def preparation_dummies_standardscaler(self, df_pre2: pd.DataFrame) -> pd.DataFrame:
-        df_dummies = pd.get_dummies(
-            df_pre2,
-            columns=["Title", "Pclass", "Embarked"],
-            drop_first=True,
-            dtype=int,
+        """One-hot encode scaled data set variant."""
+        encoder = OneHotEncoder(drop="first", sparse_output=False, dtype=int)
+        categorical_cols = ["Title", "Pclass", "Embarked"]
+
+        # Fit and transform the categorical columns
+        encoded_array = encoder.fit_transform(df_pre2[categorical_cols])
+
+        # Get feature names for the encoded columns
+        feature_names = encoder.get_feature_names_out(categorical_cols)
+
+        # Create a DataFrame with encoded columns
+        encoded_df = pd.DataFrame(
+            encoded_array, columns=feature_names, index=df_pre2.index
         )
+
+        # Drop original categorical columns and concatenate encoded ones
+        df_dummies = df_pre2.drop(columns=categorical_cols).join(encoded_df)
         return df_dummies
 
 
 @dataclass(slots=True)
 class LoadSave:
+    """Handle persistence of pre-processed data frames."""
+
     name: str
 
     def load_dataframe(self) -> pd.DataFrame:
-        with open(
-            "./pickle_files/data_preparation/data_set_" + str(self.name), "rb"
-        ) as dbfile_dataframe:
+        """Load a cached data frame from pickle storage."""
+        pickle_dir = PROJECT_ROOT / "pickle_files/data_preparation"
+        pickle_path = pickle_dir / f"data_set_{self.name}"
+
+        with open(pickle_path, "rb") as dbfile_dataframe:
             data_set = pickle.load(dbfile_dataframe)
         return data_set
 
     def save_dataframe(self, data_set: pd.DataFrame) -> None:
-        with open(
-            "./pickle_files/data_preparation/data_set_" + str(self.name), "ab"
-        ) as dbfile_dataframe:
+        """Persist a data frame to pickle storage for reuse."""
+        pickle_dir = PROJECT_ROOT / "pickle_files/data_preparation"
+        pickle_dir.mkdir(parents=True, exist_ok=True)
+        pickle_path = pickle_dir / f"data_set_{self.name}"
+
+        with open(pickle_path, "ab") as dbfile_dataframe:
             pickle.dump(data_set, dbfile_dataframe)

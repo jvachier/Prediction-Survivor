@@ -1,9 +1,17 @@
-# Allow
-!requirements.txt
-
 # Ignore Mac system files
 .DS_store
 .dSYM
+
+# Python environment and package management
+*.pyc
+*.so
+*.pylintrc
+__pycache__/
+*__pycache__/
+*.ruff_cache/
+.venv/
+uv.lock
+poetry.lock
 
 # Ignore all csv files
 *.csv
@@ -17,19 +25,11 @@
 *.bin
 *.h5
 *.keras
-*.pyc
-*.so
-*.pylintrc
 
 *data/
 *videos/
 *pickle_files/
 *predictions/
-
-*__pycache__/
-__pycache__/
-*.ruff_cache/
-
 
 # Ignore specific file
 *.mp4

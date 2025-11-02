@@ -1,5 +1,8 @@
-import os.path
+"""Command line entry point for preparing data and training models."""
+
+import logging
 from argparse import ArgumentParser
+from pathlib import Path
 
 import numpy as np
 
@@ -7,19 +10,31 @@ from src.modules import data_preparation
 from src.modules import models
 from src.modules import loading
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+# Define project root for reliable path resolution
+PROJECT_ROOT = Path(__file__).parent.parent
+
 
 def main() -> None:
+    """Execute the full training or inference pipeline based on CLI flags."""
     parser = ArgumentParser()
     parser.add_argument("--model_ensemble", action="store_true")
     parser.add_argument("--standardscaler", action="store_true")
 
     args = parser.parse_args()
 
-    print("Loading data\n")
+    logger.info("Loading data")
 
     load = loading.LoadingFiles()
 
-    if os.path.isfile("./pickle_files/loading/train") is False:
+    pickle_load_train = PROJECT_ROOT / "pickle_files/loading/train"
+
+    if not pickle_load_train.exists():
         (
             df_train,
             df_test,
@@ -30,18 +45,19 @@ def main() -> None:
             df_test,
         ) = load.load_db_file()
 
-    print("Data Preparation\n")
+    logger.info("Data Preparation")
     load_data_train = data_preparation.LoadSave("train")
     load_data_test = data_preparation.LoadSave("test")
 
     load_data_train_standardscaler = data_preparation.LoadSave("train_standardscaler")
     load_data_test_standardscaler = data_preparation.LoadSave("test_standardscaler")
 
-    if (
-        os.path.isfile("./pickle_files/data_preparation/data_set_train")
-        & os.path.isfile("./pickle_files/data_preparation/data_set_train_standarscaler")
-        is False
-    ):
+    pickle_train_path = PROJECT_ROOT / "pickle_files/data_preparation/data_set_train"
+    pickle_train_std_path = (
+        PROJECT_ROOT / "pickle_files/data_preparation/data_set_train_standardscaler"
+    )
+
+    if not (pickle_train_path.exists() or pickle_train_std_path.exists()):
         train = data_preparation.DataPreparation(df_train)
         train_prep1 = train.preparation_first()
         train_selec = train.selection(train_prep1)
@@ -51,7 +67,7 @@ def main() -> None:
         test_selec = test.selection(test_prep1)
 
         if args.standardscaler:
-            print("Standarscaler\n")
+            logger.info("Applying StandardScaler")
             train_prep2 = train.preparation_second_standardscaler(train_selec)
             train_final = train.preparation_dummies_standardscaler(train_prep2)
 
@@ -71,19 +87,19 @@ def main() -> None:
             load_data_test.save_dataframe(test_final)
     else:
         if args.standardscaler:
-            print("Standarscaler\n")
+            logger.info("Loading cached data with StandardScaler")
             train_final = load_data_train_standardscaler.load_dataframe()
             test_final = load_data_test_standardscaler.load_dataframe()
         else:
             train_final = load_data_train.load_dataframe()
             test_final = load_data_test.load_dataframe()
 
-    print("Models\n")
+    logger.info("Preparing models")
     split = models.Split(train_final)
     x_train, x_test, y_train, y_test = split.train_split()
 
     if args.model_ensemble:
-        print("Model Ensemble\n")
+        logger.info("Training Model Ensemble")
         voting = models.ModelEnsemble(x_train, x_test, y_train, y_test)
 
         mv_clf = voting.model_cross()
@@ -93,12 +109,15 @@ def main() -> None:
         test_result_rfc["Survived"] = prediction_rfc
         results_rfc = test_result_rfc[["PassengerId", "Survived"]]
 
-        if os.path.isfile("./predictions/prediction_titanic_RFC_new.csv") is False:
-            results_rfc.to_csv(
-                "./predictions/prediction_titanic_RFC_new.csv", index=False
-            )
+        predictions_dir = PROJECT_ROOT / "src/predictions"
+        predictions_dir.mkdir(parents=True, exist_ok=True)
+        output_path = predictions_dir / "prediction_titanic_RFC_new.csv"
+
+        if not output_path.exists():
+            results_rfc.to_csv(output_path, index=False)
+            logger.info(f"Predictions saved to {output_path}")
     else:
-        print("Deep Neural Network\n")
+        logger.info("Training Deep Neural Network")
         y_train = train_final.loc[:, "Survived"].to_numpy()
         features_train = train_final.drop(columns=["Survived"]).to_numpy()
 
@@ -118,8 +137,13 @@ def main() -> None:
         test_result_nn["Survived"] = label_array
         results_nn = test_result_nn[["PassengerId", "Survived"]]
 
-        if os.path.isfile("./predictions/prediction_titanic_NN.csv") is False:
-            results_nn.to_csv("./predictions/prediction_titanic_NN.csv", index=False)
+        predictions_dir = PROJECT_ROOT / "src/predictions"
+        predictions_dir.mkdir(parents=True, exist_ok=True)
+        output_path = predictions_dir / "prediction_titanic_NN.csv"
+
+        if not output_path.exists():
+            results_nn.to_csv(output_path, index=False)
+            logger.info(f"Predictions saved to {output_path}")
 
 
 if __name__ == "__main__":
