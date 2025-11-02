@@ -29,17 +29,27 @@ PROJECT_ROOT = Path(__file__).parent.parent
 def main() -> None:
     """Execute the full training or inference pipeline based on CLI flags."""
     parser = ArgumentParser()
-    parser.add_argument("--model_ensemble", action="store_true", 
-                       help="Train ensemble models (default: train neural network)")
-    parser.add_argument("--standardscaler", action="store_true",
-                       help="Force StandardScaler preprocessing (NN uses it by default)")
-    parser.add_argument("--retrain", action="store_true",
-                       help="Force retraining even if model exists")
-    parser.add_argument("--load_model", type=str,
-                       help="Path to existing model file to load (skips training)")
+    parser.add_argument(
+        "--model_ensemble",
+        action="store_true",
+        help="Train ensemble models (default: train neural network)",
+    )
+    parser.add_argument(
+        "--standardscaler",
+        action="store_true",
+        help="Force StandardScaler preprocessing (NN uses it by default)",
+    )
+    parser.add_argument(
+        "--retrain", action="store_true", help="Force retraining even if model exists"
+    )
+    parser.add_argument(
+        "--load_model",
+        type=str,
+        help="Path to existing model file to load (skips training)",
+    )
 
     args = parser.parse_args()
-    
+
     # Neural networks need standardized features by default
     use_standardscaler = args.standardscaler or not args.model_ensemble
 
@@ -76,7 +86,9 @@ def main() -> None:
 
     # Check if the correct cache file exists based on what we need
     cache_exists = (
-        pickle_train_std_path.exists() if use_standardscaler else pickle_train_path.exists()
+        pickle_train_std_path.exists()
+        if use_standardscaler
+        else pickle_train_path.exists()
     )
 
     if not cache_exists:
@@ -125,7 +137,7 @@ def main() -> None:
         logger.info("Model Ensemble")
         model_dir = PROJECT_ROOT / config.get("paths.model_dir")
         model_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Check if we should load an existing model
         if args.load_model:
             # Load specific model file
@@ -137,7 +149,7 @@ def main() -> None:
         else:
             # Check for latest trained model in model_dir
             existing_models = sorted(model_dir.glob("stacking_classifier_*.joblib"))
-            
+
             if existing_models and not args.retrain:
                 # Load the most recent model
                 latest_model = existing_models[-1]
@@ -149,7 +161,7 @@ def main() -> None:
                     logger.info("Retraining ensemble model (--retrain flag set)")
                 else:
                     logger.info("No existing model found, training new ensemble model")
-                    
+
                 stacking = models.ModelEnsemble(x_train, x_test, y_train, y_test)
                 mv_clf = stacking.model_cross()
 
@@ -179,7 +191,7 @@ def main() -> None:
         test_result_nn = test_final.copy()
         model_dir = PROJECT_ROOT / config.get("paths.model_dir")
         model_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Check if we should load an existing model
         if args.load_model:
             # Load specific model file
@@ -188,16 +200,18 @@ def main() -> None:
                 model_path = PROJECT_ROOT / model_path
             logger.info(f"Loading model from {model_path}")
             from keras.models import load_model
+
             modell_nn = load_model(model_path)
         else:
             # Check for latest trained model in model_dir
             existing_models = sorted(model_dir.glob("neural_network_*.keras"))
-            
+
             if existing_models and not args.retrain:
                 # Load the most recent model
                 latest_model = existing_models[-1]
                 logger.info(f"Loading existing model from {latest_model}")
                 from keras.models import load_model
+
                 modell_nn = load_model(latest_model)
             else:
                 # Train new model
@@ -205,7 +219,7 @@ def main() -> None:
                     logger.info("Retraining model (--retrain flag set)")
                 else:
                     logger.info("No existing model found, training new model")
-                    
+
                 neural_network = models.NeuralNetwork(features_train, y_train)
                 modell_nn = neural_network.model_nn()
                 logger.info(modell_nn.summary())

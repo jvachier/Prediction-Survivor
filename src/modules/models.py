@@ -294,9 +294,9 @@ class NeuralNetwork:
 
         # Output layer - Binary classification
         outputs = Dense(
-            arch["output"]["units"], 
-            activation=arch["output"]["activation"], 
-            name="output"
+            arch["output"]["units"],
+            activation=arch["output"]["activation"],
+            name="output",
         )(x)
 
         # Create model
