@@ -108,24 +108,32 @@ class DataPreparation:
 
         df_pre2["Sex"] = df_pre2["Sex"].map({"female": 0, "male": 1}).astype(int)
 
-        # Use pd.cut for cleaner binning
+        # Calculate relatives before any transformations
+        df_pre2["relatives"] = df_pre2["SibSp"] + df_pre2["Parch"]
+        df_pre2["not_alone"] = (df_pre2["relatives"] == 0).astype(int)
+
+        # Calculate Fare_Per_Person using ORIGINAL continuous Fare values before binning
+        df_pre2["Fare_Per_Person"] = df_pre2["Fare"] / (df_pre2["relatives"] + 1)
+        
+        # Now bin Age and Fare
         df_pre2["Age"] = pd.cut(
             df_pre2["Age"],
             bins=[-np.inf, 11, 18, 22, 27, 33, 40, np.inf],
             labels=[0, 1, 2, 3, 4, 5, 6],
         ).astype(int)
 
-        df_pre2["relatives"] = df_pre2["SibSp"] + df_pre2["Parch"]
-        df_pre2["not_alone"] = (df_pre2["relatives"] == 0).astype(int)
-
         df_pre2["Fare"] = pd.cut(
             df_pre2["Fare"],
             bins=[-np.inf, 7.91, 14.454, 31, 99, 250, np.inf],
             labels=[0, 1, 2, 3, 4, 5],
         ).astype(int)
-
-        df_pre2["Fare_Per_Person"] = df_pre2["Fare"] / (df_pre2["relatives"] + 1)
-        df_pre2["Fare_Per_Person"] = df_pre2["Fare_Per_Person"].astype(int)
+        
+        # Bin Fare_Per_Person as well for consistency
+        df_pre2["Fare_Per_Person"] = pd.cut(
+            df_pre2["Fare_Per_Person"],
+            bins=[-np.inf, 7, 14, 30, 100, np.inf],
+            labels=[0, 1, 2, 3, 4],
+        ).astype(int)
 
         df_pre2["Age_Class"] = df_pre2["Age"] * df_pre2["Pclass"]
         df_pre2["Age_Class"] = df_pre2["Age_Class"].astype(int)
@@ -162,18 +170,19 @@ class DataPreparation:
 
         df_pre2["Sex"] = df_pre2["Sex"].map({"female": 0, "male": 1}).astype(int)
 
-        scaler = StandardScaler()
-        cols = ["Age", "Fare"]
-        df_pre2[cols] = scaler.fit_transform(df_pre2[cols])
-
+        # Calculate relatives before any transformations
         df_pre2["relatives"] = df_pre2["SibSp"] + df_pre2["Parch"]
         df_pre2["not_alone"] = (df_pre2["relatives"] == 0).astype(int)
 
+        # Calculate Fare_Per_Person using ORIGINAL continuous Fare values before scaling
         df_pre2["Fare_Per_Person"] = df_pre2["Fare"] / (df_pre2["relatives"] + 1)
-        df_pre2["Fare_Per_Person"] = df_pre2["Fare_Per_Person"].astype(int)
+
+        # Now apply StandardScaler to Age, Fare, and Fare_Per_Person
+        scaler = StandardScaler()
+        cols = ["Age", "Fare", "Fare_Per_Person"]
+        df_pre2[cols] = scaler.fit_transform(df_pre2[cols])
 
         df_pre2["Age_Class"] = df_pre2["Age"] * df_pre2["Pclass"]
-        df_pre2["Age_Class"] = df_pre2["Age_Class"].astype(int)
         return df_pre2
 
     def preparation_dummies_standardscaler(self, df_pre2: pd.DataFrame) -> pd.DataFrame:
