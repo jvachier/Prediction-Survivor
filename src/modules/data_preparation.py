@@ -114,7 +114,7 @@ class DataPreparation:
 
         # Calculate Fare_Per_Person using ORIGINAL continuous Fare values before binning
         df_pre2["Fare_Per_Person"] = df_pre2["Fare"] / (df_pre2["relatives"] + 1)
-        
+
         # Now bin Age and Fare
         df_pre2["Age"] = pd.cut(
             df_pre2["Age"],
@@ -127,7 +127,7 @@ class DataPreparation:
             bins=[-np.inf, 7.91, 14.454, 31, 99, 250, np.inf],
             labels=[0, 1, 2, 3, 4, 5],
         ).astype(int)
-        
+
         # Bin Fare_Per_Person as well for consistency
         df_pre2["Fare_Per_Person"] = pd.cut(
             df_pre2["Fare_Per_Person"],
