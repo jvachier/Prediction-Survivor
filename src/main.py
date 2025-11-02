@@ -53,9 +53,12 @@ def main() -> None:
     load_data_train_standardscaler = data_preparation.LoadSave("train_standardscaler")
     load_data_test_standardscaler = data_preparation.LoadSave("test_standardscaler")
 
-    pickle_train_path = PROJECT_ROOT / "pickle_files/data_preparation/data_set_train.joblib"
+    pickle_train_path = (
+        PROJECT_ROOT / "pickle_files/data_preparation/data_set_train.joblib"
+    )
     pickle_train_std_path = (
-        PROJECT_ROOT / "pickle_files/data_preparation/data_set_train_standardscaler.joblib"
+        PROJECT_ROOT
+        / "pickle_files/data_preparation/data_set_train_standardscaler.joblib"
     )
 
     if not (pickle_train_path.exists() or pickle_train_std_path.exists()):

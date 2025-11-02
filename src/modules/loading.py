@@ -46,7 +46,7 @@ class LoadingFiles:
         # Load from joblib files
         df_train = joblib.load(pickle_dir / "train.joblib")
         df_test = joblib.load(pickle_dir / "test.joblib")
-        
+
         return (
             df_train,
             df_test,
