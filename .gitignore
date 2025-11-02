@@ -10,7 +10,7 @@ __pycache__/
 *__pycache__/
 *.ruff_cache/
 .venv/
-uv.lock
+# uv.lock should be committed for reproducible builds
 poetry.lock
 
 # Ignore all csv files
