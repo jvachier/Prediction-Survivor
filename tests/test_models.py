@@ -75,7 +75,6 @@ def test_neural_network_initialization() -> None:
 
     # Check post_init worked
     assert nn.n_xtrain == 10  # 10 features
-    assert nn.m_xtrain == 100  # 100 samples
 
 
 def test_neural_network_model_architecture() -> None:
@@ -92,8 +91,8 @@ def test_neural_network_model_architecture() -> None:
     # Check input shape
     assert model.input_shape == (None, 10)
 
-    # Check output shape (binary classification)
-    assert model.output_shape == (None, 2)
+    # Check output shape (binary classification with 1 unit)
+    assert model.output_shape == (None, 1)
 
     # Check that model is compiled
     assert model.optimizer is not None

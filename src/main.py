@@ -2,9 +2,10 @@
 
 import logging
 from argparse import ArgumentParser
+from datetime import datetime
 from pathlib import Path
 
-import numpy as np
+import joblib
 
 from src.modules import data_preparation
 from src.modules import models
@@ -32,7 +33,7 @@ def main() -> None:
 
     load = loading.LoadingFiles()
 
-    pickle_load_train = PROJECT_ROOT / "pickle_files/loading/train"
+    pickle_load_train = PROJECT_ROOT / "pickle_files/loading/train.joblib"
 
     if not pickle_load_train.exists():
         (
@@ -52,9 +53,9 @@ def main() -> None:
     load_data_train_standardscaler = data_preparation.LoadSave("train_standardscaler")
     load_data_test_standardscaler = data_preparation.LoadSave("test_standardscaler")
 
-    pickle_train_path = PROJECT_ROOT / "pickle_files/data_preparation/data_set_train"
+    pickle_train_path = PROJECT_ROOT / "pickle_files/data_preparation/data_set_train.joblib"
     pickle_train_std_path = (
-        PROJECT_ROOT / "pickle_files/data_preparation/data_set_train_standardscaler"
+        PROJECT_ROOT / "pickle_files/data_preparation/data_set_train_standardscaler.joblib"
     )
 
     if not (pickle_train_path.exists() or pickle_train_std_path.exists()):
@@ -100,11 +101,19 @@ def main() -> None:
 
     if args.model_ensemble:
         logger.info("Training Model Ensemble")
-        voting = models.ModelEnsemble(x_train, x_test, y_train, y_test)
+        stacking = models.ModelEnsemble(x_train, x_test, y_train, y_test)
 
-        mv_clf = voting.model_cross()
+        mv_clf = stacking.model_cross()
 
-        prediction_rfc = mv_clf.predict(test_final.values)
+        # Save the trained ensemble model
+        model_dir = PROJECT_ROOT / "pickle_files/model"
+        model_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        model_path = model_dir / f"stacking_classifier_{timestamp}.joblib"
+        joblib.dump(mv_clf, model_path, compress=3)
+        logger.info(f"Model saved to {model_path}")
+
+        prediction_rfc = mv_clf.predict(test_final)
         test_result_rfc = test_final.copy()
         test_result_rfc["Survived"] = prediction_rfc
         results_rfc = test_result_rfc[["PassengerId", "Survived"]]
@@ -124,15 +133,21 @@ def main() -> None:
         test_result_nn = test_final.copy()
         neural_network = models.NeuralNetwork(features_train, y_train)
         modell_nn = neural_network.model_nn()
-        print(modell_nn.summary())
+        logger.info(modell_nn.summary())
         neural_network.fit_nn()
 
+        # Save the trained neural network
+        model_dir = PROJECT_ROOT / "pickle_files/model"
+        model_dir.mkdir(parents=True, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        model_path = model_dir / f"neural_network_{timestamp}.keras"
+        modell_nn.save(model_path)
+        logger.info(f"Model saved to {model_path}")
+
+        # Binary classification: predictions are probabilities (0-1)
+        # Threshold at 0.5 to get class labels
         predictions = modell_nn.predict(x=test_final.to_numpy(), verbose=2)
-        n_test, m_test = predictions.shape
-        label = []
-        for i in range(n_test):
-            label.append(np.argmax(predictions[i], 0))
-        label_array = np.asarray(label).reshape(-1)
+        label_array = (predictions > 0.5).astype(int).flatten()
 
         test_result_nn["Survived"] = label_array
         results_nn = test_result_nn[["PassengerId", "Survived"]]

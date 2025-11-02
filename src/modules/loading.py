@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Tuple
 from pathlib import Path
 
-import pickle
+import joblib
 import pandas as pd
 
 # Define project root for reliable path resolution
@@ -18,7 +18,7 @@ class LoadingFiles:
     def load_save_df(
         self,
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        """Load raw CSV files and save them to disk as pickle backups."""
+        """Load raw CSV files and save them to disk as joblib backups."""
         train_csv = PROJECT_ROOT / "src/data/train.csv"
         test_csv = PROJECT_ROOT / "src/data/test.csv"
 
@@ -28,11 +28,9 @@ class LoadingFiles:
         pickle_dir = PROJECT_ROOT / "pickle_files/loading"
         pickle_dir.mkdir(parents=True, exist_ok=True)
 
-        with open(pickle_dir / "train", "ab") as dbfile_train:
-            pickle.dump(df_train, dbfile_train)
-
-        with open(pickle_dir / "test", "ab") as dbfile_test:
-            pickle.dump(df_test, dbfile_test)
+        # Use joblib for efficient serialization with compression
+        joblib.dump(df_train, pickle_dir / "train.joblib", compress=3)
+        joblib.dump(df_test, pickle_dir / "test.joblib", compress=3)
 
         return (
             df_train,
@@ -45,11 +43,10 @@ class LoadingFiles:
         """Load previously cached training and test data sets."""
         pickle_dir = PROJECT_ROOT / "pickle_files/loading"
 
-        with open(pickle_dir / "train", "rb") as dbfile_train:
-            df_train = pickle.load(dbfile_train)
-
-        with open(pickle_dir / "test", "rb") as dbfile_test:
-            df_test = pickle.load(dbfile_test)
+        # Load from joblib files
+        df_train = joblib.load(pickle_dir / "train.joblib")
+        df_test = joblib.load(pickle_dir / "test.joblib")
+        
         return (
             df_train,
             df_test,

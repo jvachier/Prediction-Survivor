@@ -1,7 +1,7 @@
 """Utilities for preparing Titanic data sets for modelling."""
 
 from dataclasses import dataclass
-import pickle
+import joblib
 from pathlib import Path
 
 import re
@@ -80,30 +80,27 @@ class DataPreparation:
     def preparation_second(self, df_selected: pd.DataFrame) -> pd.DataFrame:
         """Bin numerical features and derive helper columns for models."""
         df_pre2 = df_selected.copy()
-        df_pre2["Embarked"] = df_pre2["Embarked"].replace(["S", "C", "Q"], [0, 1, 2])
-        df_pre2["Sex"] = df_pre2["Sex"].replace(["female", "male"], [0, 1])
+        # Map Embarked, filling unmapped values (0) with a default
+        df_pre2["Embarked"] = df_pre2["Embarked"].map({"S": 0, "C": 1, "Q": 2})
+        df_pre2["Embarked"] = df_pre2["Embarked"].fillna(0).astype(int)
 
-        df_pre2.loc[df_pre2.Age <= 11, "Age"] = 0
-        df_pre2.loc[(df_pre2.Age <= 18) & (11 < df_pre2.Age), "Age"] = 1
-        df_pre2.loc[(df_pre2.Age <= 22) & (18 < df_pre2.Age), "Age"] = 2
-        df_pre2.loc[(df_pre2.Age <= 27) & (22 < df_pre2.Age), "Age"] = 3
-        df_pre2.loc[(df_pre2.Age <= 33) & (27 < df_pre2.Age), "Age"] = 4
-        df_pre2.loc[(df_pre2.Age <= 40) & (33 < df_pre2.Age), "Age"] = 5
-        df_pre2.loc[df_pre2.Age > 40, "Age"] = 6
-        df_pre2["Age"] = df_pre2["Age"].astype(int)
+        df_pre2["Sex"] = df_pre2["Sex"].map({"female": 0, "male": 1}).astype(int)
+
+        # Use pd.cut for cleaner binning
+        df_pre2["Age"] = pd.cut(
+            df_pre2["Age"],
+            bins=[-np.inf, 11, 18, 22, 27, 33, 40, np.inf],
+            labels=[0, 1, 2, 3, 4, 5, 6],
+        ).astype(int)
 
         df_pre2["relatives"] = df_pre2["SibSp"] + df_pre2["Parch"]
-        df_pre2.loc[df_pre2["relatives"] > 0, "not_alone"] = 0
-        df_pre2.loc[df_pre2["relatives"] == 0, "not_alone"] = 1
-        df_pre2["not_alone"] = df_pre2["not_alone"].astype(int)
+        df_pre2["not_alone"] = (df_pre2["relatives"] == 0).astype(int)
 
-        df_pre2.loc[df_pre2["Fare"] <= 7.91, "Fare"] = 0
-        df_pre2.loc[(df_pre2["Fare"] > 7.91) & (df_pre2["Fare"] <= 14.454), "Fare"] = 1
-        df_pre2.loc[(df_pre2["Fare"] > 14.454) & (df_pre2["Fare"] <= 31), "Fare"] = 2
-        df_pre2.loc[(df_pre2["Fare"] > 31) & (df_pre2["Fare"] <= 99), "Fare"] = 3
-        df_pre2.loc[(df_pre2["Fare"] > 99) & (df_pre2["Fare"] <= 250), "Fare"] = 4
-        df_pre2.loc[df_pre2["Fare"] > 250, "Fare"] = 5
-        df_pre2["Fare"] = df_pre2["Fare"].astype(int)
+        df_pre2["Fare"] = pd.cut(
+            df_pre2["Fare"],
+            bins=[-np.inf, 7.91, 14.454, 31, 99, 250, np.inf],
+            labels=[0, 1, 2, 3, 4, 5],
+        ).astype(int)
 
         df_pre2["Fare_Per_Person"] = df_pre2["Fare"] / (df_pre2["relatives"] + 1)
         df_pre2["Fare_Per_Person"] = df_pre2["Fare_Per_Person"].astype(int)
@@ -137,20 +134,18 @@ class DataPreparation:
     ) -> pd.DataFrame:
         """Scale numerical features while keeping core transformations consistent."""
         df_pre2 = df_selected.copy()
-        df_pre2["Embarked"] = df_pre2["Embarked"].replace(["S", "C", "Q"], [0, 1, 2])
-        df_pre2["Sex"] = df_pre2["Sex"].replace(["female", "male"], [0, 1])
+        # Map Embarked, filling unmapped values (0) with a default
+        df_pre2["Embarked"] = df_pre2["Embarked"].map({"S": 0, "C": 1, "Q": 2})
+        df_pre2["Embarked"] = df_pre2["Embarked"].fillna(0).astype(int)
+
+        df_pre2["Sex"] = df_pre2["Sex"].map({"female": 0, "male": 1}).astype(int)
 
         scaler = StandardScaler()
         cols = ["Age", "Fare"]
-        old_df = df_pre2[cols].shape
-        df_pre2[cols] = scaler.fit_transform(
-            df_pre2[cols].to_numpy().reshape(-1, 1)
-        ).reshape(old_df)
+        df_pre2[cols] = scaler.fit_transform(df_pre2[cols])
 
         df_pre2["relatives"] = df_pre2["SibSp"] + df_pre2["Parch"]
-        df_pre2.loc[df_pre2["relatives"] > 0, "not_alone"] = 0
-        df_pre2.loc[df_pre2["relatives"] == 0, "not_alone"] = 1
-        df_pre2["not_alone"] = df_pre2["not_alone"].astype(int)
+        df_pre2["not_alone"] = (df_pre2["relatives"] == 0).astype(int)
 
         df_pre2["Fare_Per_Person"] = df_pre2["Fare"] / (df_pre2["relatives"] + 1)
         df_pre2["Fare_Per_Person"] = df_pre2["Fare_Per_Person"].astype(int)
@@ -187,19 +182,18 @@ class LoadSave:
     name: str
 
     def load_dataframe(self) -> pd.DataFrame:
-        """Load a cached data frame from pickle storage."""
+        """Load a cached data frame from joblib storage."""
         pickle_dir = PROJECT_ROOT / "pickle_files/data_preparation"
-        pickle_path = pickle_dir / f"data_set_{self.name}"
+        pickle_path = pickle_dir / f"data_set_{self.name}.joblib"
 
-        with open(pickle_path, "rb") as dbfile_dataframe:
-            data_set = pickle.load(dbfile_dataframe)
+        data_set = joblib.load(pickle_path)
         return data_set
 
     def save_dataframe(self, data_set: pd.DataFrame) -> None:
-        """Persist a data frame to pickle storage for reuse."""
+        """Persist a data frame to joblib storage for reuse."""
         pickle_dir = PROJECT_ROOT / "pickle_files/data_preparation"
         pickle_dir.mkdir(parents=True, exist_ok=True)
-        pickle_path = pickle_dir / f"data_set_{self.name}"
+        pickle_path = pickle_dir / f"data_set_{self.name}.joblib"
 
-        with open(pickle_path, "ab") as dbfile_dataframe:
-            pickle.dump(data_set, dbfile_dataframe)
+        # Use joblib with compression for efficient storage
+        joblib.dump(data_set, pickle_path, compress=3)

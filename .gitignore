@@ -44,3 +44,6 @@ poetry.lock
 
 # Ignore all json file
 *.json
+
+*.pytest_cache/
+*catboost_info/
