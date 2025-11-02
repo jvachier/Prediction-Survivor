@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Optional, Tuple
 
 import joblib
+import numpy as np
 import pandas as pd
 from keras.models import load_model
 
@@ -213,12 +214,14 @@ def train_ensemble_model(
     return mv_clf
 
 
-def train_neural_network(features_train: pd.DataFrame, y_train, model_dir: Path):
+def train_neural_network(
+    features_train: np.ndarray, y_train: np.ndarray, model_dir: Path
+):
     """Train and save a new neural network model.
 
     Args:
-        features_train: Training features
-        y_train: Training labels
+        features_train: Training features as numpy array
+        y_train: Training labels as numpy array
         model_dir: Directory to save the model
 
     Returns:
@@ -227,7 +230,10 @@ def train_neural_network(features_train: pd.DataFrame, y_train, model_dir: Path)
     logger.info("Training new neural network")
     neural_network = models.NeuralNetwork(features_train, y_train)
     modell_nn = neural_network.model_nn()
-    logger.info(modell_nn.summary())
+
+    # Print model summary to logger (using print_fn to redirect output)
+    modell_nn.summary(print_fn=lambda x: logger.info(x))
+
     neural_network.fit_nn()
 
     # Save the model
