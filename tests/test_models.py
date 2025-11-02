@@ -1,8 +1,11 @@
 """Tests for model classes."""
 
+import warnings
 import numpy as np
 import pandas as pd
 import pytest
+import joblib
+from pathlib import Path
 
 from src.modules.models import Split, ModelEnsemble, NeuralNetwork
 
@@ -97,3 +100,83 @@ def test_neural_network_model_architecture() -> None:
     # Check that model is compiled
     assert model.optimizer is not None
     assert model.loss is not None
+
+
+def test_model_ensemble_save_load(tmp_path: Path) -> None:
+    """Test saving and loading ensemble model."""
+    # Suppress CatBoost sklearn compatibility warning (known issue, will be fixed in sklearn 1.8)
+    warnings.filterwarnings(
+        "ignore",
+        message=".*CatBoostClassifier.*__sklearn_tags__.*",
+        category=DeprecationWarning,
+    )
+
+    # Create sample data with proper DataFrame format
+    x_train = pd.DataFrame(np.random.randn(80, 3), columns=["f1", "f2", "f3"])
+    x_test = pd.DataFrame(np.random.randn(20, 3), columns=["f1", "f2", "f3"])
+    y_train = np.random.randint(0, 2, 80)
+    y_test = np.random.randint(0, 2, 20)
+
+    ensemble = ModelEnsemble(x_train, x_test, y_train, y_test)
+
+    # Train model (this will take a while due to cross-validation)
+    model = ensemble.model_cross()
+
+    # Save model
+    model_path = tmp_path / "test_ensemble.joblib"
+    joblib.dump(model, model_path, compress=3)
+
+    # Verify file exists
+    assert model_path.exists()
+
+    # Load model
+    loaded_model = joblib.load(model_path)
+    assert loaded_model is not None
+
+    # Make predictions with both models
+    pred1 = model.predict(x_test)
+    pred2 = loaded_model.predict(x_test)
+
+    # Predictions should be identical
+    assert np.array_equal(pred1, pred2)
+
+
+def test_neural_network_save_load(tmp_path: Path) -> None:
+    """Test saving and loading neural network."""
+    # Suppress Keras optimizer loading warning (expected for untrained models)
+    warnings.filterwarnings(
+        "ignore",
+        message=".*Skipping variable loading for optimizer.*",
+        category=UserWarning,
+    )
+
+    x_train = np.random.randn(100, 10)
+    y_train = np.random.randint(0, 2, 100)
+
+    nn = NeuralNetwork(x_train, y_train)
+    model = nn.model_nn()
+
+    # Save model
+    model_path = tmp_path / "test_nn.keras"
+    model.save(model_path)
+
+    # Verify file exists
+    assert model_path.exists()
+
+    # Load model
+    from keras.models import load_model
+
+    loaded_model = load_model(model_path)
+
+    # Verify architecture
+    assert loaded_model.input_shape == model.input_shape
+    assert loaded_model.output_shape == model.output_shape
+    assert len(loaded_model.layers) == len(model.layers)
+
+    # Make predictions with both models
+    test_input = np.random.randn(5, 10)
+    pred1 = model.predict(test_input, verbose=0)
+    pred2 = loaded_model.predict(test_input, verbose=0)
+
+    # Predictions should be very close (some float precision differences possible)
+    np.testing.assert_array_almost_equal(pred1, pred2, decimal=5)

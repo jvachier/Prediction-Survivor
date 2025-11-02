@@ -24,7 +24,27 @@ class DataPreparation:
     data: pd.DataFrame
 
     def preparation_first(self) -> pd.DataFrame:
-        """Extract title and deck features and clean categorical columns."""
+        """Extract title and deck features and clean categorical columns.
+
+        Raises:
+            ValueError: If required columns are missing
+        """
+        # Validate required columns exist
+        required_cols = [
+            "Name",
+            "Age",
+            "Fare",
+            "Pclass",
+            "SibSp",
+            "Parch",
+            "Embarked",
+            "Sex",
+            "Cabin",
+        ]
+        missing_cols = set(required_cols) - set(self.data.columns)
+        if missing_cols:
+            raise ValueError(f"Missing required columns: {sorted(missing_cols)}")
+
         df_data = self.data.copy()
         deck = {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5, "F": 6, "G": 7, "U": 8}
         df_data["Cabin"] = df_data["Cabin"].fillna("U0")
